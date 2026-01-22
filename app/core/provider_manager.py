@@ -22,26 +22,10 @@ def cargar_proveedores():
 def guardar_proveedor(nombre_clave, datos_proveedor):
     """
     Añade o actualiza un proveedor y guarda los cambios en el JSON.
-    Ejemplo datos_proveedor: {'firma': ['...'], 'patron': '...', 'carpeta': '...'}
     """
-    # 1. Cargamos lo actual
     proveedores = cargar_proveedores()
-
-    # 2. Actualizamos
     proveedores[nombre_clave] = datos_proveedor
-
-    # 3. Guardamos en disco
     return _escribir_json(proveedores)
-
-
-def eliminar_proveedor(nombre_clave):
-    """Elimina un proveedor por su clave."""
-    proveedores = cargar_proveedores()
-
-    if nombre_clave in proveedores:
-        del proveedores[nombre_clave]
-        return _escribir_json(proveedores)
-    return False
 
 
 def _escribir_json(datos):

@@ -1,64 +1,65 @@
 import re
-# [CAMBIO] Ya no importamos PROVEEDORES de config, sino el cargador dinámico
 from app.core.provider_manager import cargar_proveedores
 
 
 def analizar_documento(texto_pdf):
     """
-    Recibe el texto crudo del PDF.
-    1. Carga reglas desde JSON.
-    2. Busca proveedor.
-    3. Extrae pedido.
+    1. Identifica proveedor.
+    2. Extrae Nº Documento.
+    3. Extrae Fecha (limpiando espacios del OCR).
     """
     resultado = {
         "proveedor_detectado": None,
-        "numero_pedido": None,
-        "confianza": "Baja",
+        "id_documento": None,
+        "fecha_documento": None,
+        "formato_fecha": None,
+        "carpeta_destino": None,
         "log_info": ""
     }
 
     if not texto_pdf:
         return resultado
 
-    # [CAMBIO] Cargamos los proveedores al momento de analizar
-    # Esto permite editar el JSON y que la app funcione sin reiniciar
     diccionario_proveedores = cargar_proveedores()
-
-    # 1. IDENTIFICACIÓN DEL PROVEEDOR
     proveedor_encontrado = None
 
+    # 1. IDENTIFICACIÓN
     for nombre_prov, reglas in diccionario_proveedores.items():
         firmas = reglas.get("firma", [])
-        # Buscamos si alguna firma está en el texto
         for firma in firmas:
             if firma.lower() in texto_pdf.lower():
                 proveedor_encontrado = nombre_prov
                 break
-
-        if proveedor_encontrado:
-            break
+        if proveedor_encontrado: break
 
     if not proveedor_encontrado:
-        resultado["log_info"] = "No se detectó ninguna firma de proveedor conocida."
+        resultado["log_info"] = "Proveedor desconocido."
         return resultado
 
-    # 2. EXTRACCIÓN DE DATOS
     resultado["proveedor_detectado"] = proveedor_encontrado
-    reglas_activas = diccionario_proveedores[proveedor_encontrado]
-    patron = reglas_activas.get("patron_pedido")
+    reglas = diccionario_proveedores[proveedor_encontrado]
 
-    try:
-        match = re.search(patron, texto_pdf, re.IGNORECASE | re.MULTILINE)
+    # 2. EXTRACCIÓN DOCUMENTO (Albarán/Factura)
+    patron_doc = reglas.get("patron_documento")
+    if patron_doc:
+        match_doc = re.search(patron_doc, texto_pdf, re.IGNORECASE | re.MULTILINE)
+        if match_doc:
+            raw_doc = match_doc.group(1).strip()
+            # [MEJORA] Limpieza: Quitamos espacios intermedios (ej: "49 51 667" -> "4951667")
+            resultado["id_documento"] = raw_doc.replace(" ", "").replace(".", "")
 
-        if match:
-            pedido_limpio = match.group(1).strip()
-            resultado["numero_pedido"] = pedido_limpio
-            resultado["confianza"] = "Alta"
-            resultado["carpeta_destino"] = reglas_activas.get("carpeta_destino")
-        else:
-            resultado["log_info"] = f"Proveedor {proveedor_encontrado} identificado, pero falló la Regex."
+    # 3. EXTRACCIÓN FECHA
+    patron_fecha = reglas.get("patron_fecha")
+    if patron_fecha:
+        match_fecha = re.search(patron_fecha, texto_pdf, re.IGNORECASE | re.MULTILINE)
+        if match_fecha:
+            raw_fecha = match_fecha.group(1).strip()
+            # [MEJORA] Limpieza: Quitamos espacios en la fecha (ej: "19/ 01 / 2026" -> "19/01/2026")
+            fecha_limpia = raw_fecha.replace(" ", "")
 
-    except Exception as e:
-        resultado["log_info"] = f"Error ejecutando Regex: {e}"
+            resultado["fecha_documento"] = fecha_limpia
+            resultado["formato_fecha"] = reglas.get("formato_fecha_origen", "%d/%m/%Y")
+
+    resultado["carpeta_destino"] = reglas.get("carpeta_destino")
 
     return resultado

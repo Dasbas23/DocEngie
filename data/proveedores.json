@@ -1,17 +1,23 @@
 {
     "CBM_IBERICA": {
         "firma": ["ESB85631083", "CBM Iberica"],
-        "patron_pedido": "Documento[\\s\\S]*?\"(\\d{7})",
+        "patron_documento": "(?:\\d{2}\\/\\s*\\d{2}\\/\\s*\\d{4})[\\s\\S]*?(\\d{7})",
+        "patron_fecha": "(\\d{2}\\/\\s*\\d{2}\\/\\s*\\d{4})",
+        "formato_fecha_origen": "%d/%m/%Y",
         "carpeta_destino": "CBM_Albaranes"
     },
     "EUROPART": {
         "firma": ["A-96598917", "EUROPART HISPANO-ALEMANA"],
-        "patron_pedido": "Nº Albarán[\\s\\S]*?(\\d{2}AL[\\s\\.\\d]+)",
+        "patron_documento": "Nº Albarán[\\s\\S]*?(\\d{2}AL[\\s\\.\\d]+)",
+        "patron_fecha": "Fecha[\\s\\S]*?(\\d{2}\\/\\d{2}\\/\\d{4})",
+        "formato_fecha_origen": "%d/%m/%Y",
         "carpeta_destino": "Europart_Albaranes"
     },
     "VOLVO_TRUCKS": {
         "firma": ["B80354962", "Volvo Truck Center"],
-        "patron_pedido": "Pedido:[\\s\\S]*?\"(\\d+)",
+        "patron_documento": "Pedido:[\\s\\S]*?\"(\\d+)",
+        "patron_fecha": "Fecha:[\\s\\S]*?\"(\\d{2}\\.\\d{2}\\.\\d{2})",
+        "formato_fecha_origen": "%d.%m.%y",
         "carpeta_destino": "Volvo_Albaranes"
     }
 }

@@ -131,7 +131,7 @@ class PDFClassifierApp(ctk.CTk):
             # FASE 2: Analizar
             datos = analizar_documento(texto)
             if datos["proveedor_detectado"]:
-                self.log_message(f"✅ {datos['proveedor_detectado']} -> Doc: {datos['numero_pedido']}")
+                self.log_message(f"✅ {datos['proveedor_detectado']} -> Doc: {datos['id_documento']}")
             else:
                 self.log_message(f"❓ {archivo} -> Proveedor desconocido (Revisión Manual)")
 

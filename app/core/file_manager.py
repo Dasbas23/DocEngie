@@ -1,44 +1,60 @@
 import shutil
 import os
+from datetime import datetime
 from app.config import DEFAULT_ERROR_DIR
 
 
-def mover_y_renombrar(ruta_origen, datos_analisis, carpeta_base_salida):
+def mover_y_renombrar(ruta_origen, datos, carpeta_base_salida):
     """
-    Toma el archivo original y lo mueve a su destino final.
-    Ahora acepta 'carpeta_base_salida' dinámica desde la GUI.
+    Renombra a: YYYY-MM-DD_NoDocumento.pdf
     """
-    nombre_archivo_original = os.path.basename(ruta_origen)
+    nombre_original = os.path.basename(ruta_origen)
 
-    # CASO 1: Éxito (Tenemos proveedor y pedido/albarán)
-    if datos_analisis["proveedor_detectado"] and datos_analisis["numero_pedido"]:
-        proveedor = datos_analisis["proveedor_detectado"]
-        raw_pedido = datos_analisis["numero_pedido"]
+    # CONDICIÓN DE ÉXITO: Tenemos Proveedor + ID Documento
+    # (La fecha es opcional, si falla usamos "0000-00-00" o fecha de hoy)
+    if datos["proveedor_detectado"] and datos["id_documento"]:
 
-        # [MEJORA] Limpieza profunda del nombre (quitamos espacios y puntos del albarán)
-        # Ejemplo: "02AL 1.090 9" -> "02AL10909"
-        pedido_limpio = "".join([c for c in raw_pedido if c.isalnum() or c in "-_"])
+        proveedor = datos["proveedor_detectado"]
+        doc_id = datos["id_documento"]
+        fecha_raw = datos.get("fecha_documento")
+        formato_origen = datos.get("formato_fecha")
 
-        subcarpeta = datos_analisis.get("carpeta_destino", proveedor)
+        # Procesamiento de Fecha
+        fecha_str_final = "0000-00-00"  # Valor por defecto si falla
+
+        if fecha_raw and formato_origen:
+            try:
+                # Convertimos string a objeto fecha real
+                objeto_fecha = datetime.strptime(fecha_raw, formato_origen)
+                # Convertimos objeto fecha a string ISO (YYYY-MM-DD)
+                fecha_str_final = objeto_fecha.strftime("%Y-%m-%d")
+            except ValueError:
+                # Si la fecha está mal leída o el formato no cuadra
+                fecha_str_final = "FECHA-ERROR"
+
+        # NUEVO NOMBRE: 2026-01-19_4951667.pdf
+        nuevo_nombre = f"{fecha_str_final}_{doc_id}.pdf"
+
+        # Ruta destino
+        subcarpeta = datos.get("carpeta_destino", proveedor)
         dir_final = os.path.join(carpeta_base_salida, subcarpeta)
 
-        extension = os.path.splitext(nombre_archivo_original)[1]
-        nuevo_nombre = f"{pedido_limpio}{extension}"
-
-    # CASO 2: Fallo (Revisión manual)
     else:
+        # Fallo -> Revisión Manual
         dir_final = os.path.join(carpeta_base_salida, "Revision_Manual")
-        nuevo_nombre = nombre_archivo_original
+        nuevo_nombre = nombre_original
 
+    # --- LÓGICA DE MOVER (Igual que antes) ---
     os.makedirs(dir_final, exist_ok=True)
-    ruta_destino_final = os.path.join(dir_final, nuevo_nombre)
+    ruta_destino = os.path.join(dir_final, nuevo_nombre)
 
-    if os.path.exists(ruta_destino_final):
+    # Evitar duplicados
+    if os.path.exists(ruta_destino):
         base, ext = os.path.splitext(nuevo_nombre)
-        ruta_destino_final = os.path.join(dir_final, f"{base}_DUPLICADO_{os.urandom(2).hex()}{ext}")
+        ruta_destino = os.path.join(dir_final, f"{base}_DUPLICADO_{os.urandom(2).hex()}{ext}")
 
     try:
-        shutil.move(ruta_origen, ruta_destino_final)
-        return True, ruta_destino_final
+        shutil.move(ruta_origen, ruta_destino)
+        return True, ruta_destino
     except Exception as e:
         return False, str(e)
