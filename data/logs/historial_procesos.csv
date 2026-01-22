@@ -29,3 +29,6 @@ Fecha,Archivo Original,Proveedor,Pedido,Estado,Ruta Final
 2026-01-22 04:30:13,arch2.pdf,EUROPART,N/A,OK,C:/Users/marius.ion/Documents/pdf_classifier_app/data/output\Revision_Manual\arch2_DUPLICADO_44a0.pdf
 2026-01-22 04:30:13,arch3.pdf,VOLVO_TRUCKS,N/A,OK,C:/Users/marius.ion/Documents/pdf_classifier_app/data/output\Revision_Manual\arch3_DUPLICADO_fddb.pdf
 2026-01-22 04:30:13,ocr.pdf,,N/A,OK,C:/Users/marius.ion/Documents/pdf_classifier_app/data/output\Revision_Manual\ocr_DUPLICADO_8a48.pdf
+2026-01-22 05:35:51,arch2.pdf,EUROPART,N/A,OK,C:\Users\marius.ion\Documents\pdf_classifier_app\data\output\Revision_Manual\arch2_DUPLICADO_48ee.pdf
+2026-01-22 05:35:51,arch3.pdf,VOLVO_TRUCKS,7360167,OK,C:\Users\marius.ion\Documents\pdf_classifier_app\data\output\Volvo_Albaranes\2026-01-20_7360167.pdf
+2026-01-22 05:35:51,ocr.pdf,,N/A,OK,C:\Users\marius.ion\Documents\pdf_classifier_app\data\output\Revision_Manual\ocr_DUPLICADO_8d3b.pdf
