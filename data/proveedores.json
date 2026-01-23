@@ -29,16 +29,16 @@
     },
     "GLOBAL_PARTS": {
         "firma" : ["91 675 71 52", "@globalparts", "B85930147" ],
-        "patron_documento" : "(?:lbar[aá]n)[\\s\\S]*?\\d{5}(\\d{5})",
+        "patron_documento" : "(?:lbar[aá]n)[\\s\\S]*?(\\d{10})",
         "patron_fecha" : "(\\d{2}\\/\\s*\\d{2}\\/\\s*\\d{4})",
         "formato_fecha_origen" : "%d/%m/%Y",
         "carpeta_destino" : "GlobalParts_Albaranes"
+    },
+    "RS_TURIA": {
+        "firma" : ["RSTURIA", "TURIA", "" ],
+        "patron_documento" : "(?i)\\bav\\s*(\\d{8})\\b",
+        "patron_fecha" : "(\\d{2}\\/\\s*\\d{2}\\/\\s*\\d{4})",
+        "formato_fecha_origen" : "%d/%m/%Y",
+        "carpeta_destino" : "RsTuria_Albaranes"
     }
 }
-
-release(v2.0): Stable GUI with Lifecycle Management
-
-- feat: Added explicit 'Exit' button to properly terminate the app.
-- feat: UI Refresh with version labeling (v2.0 Stable).
-- fix: Window geometry adjustment (950x700) for better layout.
-- chore: Code cleanup in main_window.py."

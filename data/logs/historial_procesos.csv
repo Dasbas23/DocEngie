@@ -37,3 +37,7 @@ Fecha,Archivo Original,Proveedor,Pedido,Estado,Ruta Final
 2026-01-23 01:46:00,SVIMPRESION19_ZARAGOZA_OFICINA TECNICA_1392_001.pdf,HNTOOLS,2601188,OK,C:\Users\marius.ion\Documents\pdf_classifier_app\data\output\HnTools_Albaranes\2026-01-23_2601188.pdf
 2026-01-23 01:46:00,SVIMPRESION19_ZARAGOZA_OFICINA TECNICA_1393_001.pdf,HNTOOLS,2601251,OK,C:\Users\marius.ion\Documents\pdf_classifier_app\data\output\HnTools_Albaranes\2026-01-23_2601251.pdf
 2026-01-23 03:09:15,SVIMPRESION19_ZARAGOZA_OFICINA TECNICA_1394_001.pdf,GLOBAL_PARTS,01452,OK,C:\Users\marius.ion\Documents\pdf_classifier_app\data\output\GlobalParts_Albaranes\2026-01-21_01452.pdf
+2026-01-23 05:14:31,SVIMPRESION19_ZARAGOZA_OFICINA TECNICA_1332_001.pdf,RS_TURIA,26006209,OK,C:\Users\marius.ion\Documents\pdf_classifier_app\data\output\RsTuria_Albaranes\2026-01-15_26006209.pdf
+2026-01-23 05:16:28,ocr.pdf,RS_TURIA,26006209,OK,C:\Users\marius.ion\Documents\pdf_classifier_app\data\output\RsTuria_Albaranes\2026-01-15_26006209_DUPLICADO_13ac.pdf
+2026-01-23 05:36:56,2026-01-21_01452.pdf,GLOBAL_PARTS,01452,OK,C:\Users\marius.ion\Documents\pdf_classifier_app\data\output\GlobalParts_Albaranes\2026-01-21_01452_DUPLICADO_7bf7.pdf
+2026-01-23 05:37:30,2026-01-21_01452.pdf,GLOBAL_PARTS,0100001452,OK,C:\Users\marius.ion\Documents\pdf_classifier_app\data\output\GlobalParts_Albaranes\2026-01-21_0100001452.pdf
