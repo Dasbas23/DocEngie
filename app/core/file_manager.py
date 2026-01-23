@@ -4,14 +4,29 @@ from datetime import datetime
 from app.config import DEFAULT_ERROR_DIR
 
 
+def obtener_fecha_creacion_archivo(ruta_archivo):
+    """
+    Intenta sacar la fecha de creación/modificación de los metadatos del archivo
+    si el OCR ha fallado leyendo la fecha impresa.
+    Retorna string: "YYYY-MM-DD"
+    """
+    try:
+        # timestamp de la última modificación
+        timestamp = os.path.getmtime(ruta_archivo)
+        fecha_obj = datetime.fromtimestamp(timestamp)
+        return fecha_obj.strftime("%Y-%m-%d")
+    except:
+        return "0000-00-00"
+
+
 def mover_y_renombrar(ruta_origen, datos, carpeta_base_salida):
     """
     Renombra a: YYYY-MM-DD_NoDocumento.pdf
+    Soporta fallback de fecha si el OCR falla.
     """
     nombre_original = os.path.basename(ruta_origen)
 
-    # CONDICIÓN DE ÉXITO: Tenemos Proveedor + ID Documento
-    # (La fecha es opcional, si falla usamos "0000-00-00" o fecha de hoy)
+    # CONDICIÓN DE ÉXITO: Basta con tener Proveedor + ID Documento
     if datos["proveedor_detectado"] and datos["id_documento"]:
 
         proveedor = datos["proveedor_detectado"]
@@ -19,20 +34,25 @@ def mover_y_renombrar(ruta_origen, datos, carpeta_base_salida):
         fecha_raw = datos.get("fecha_documento")
         formato_origen = datos.get("formato_fecha")
 
-        # Procesamiento de Fecha
-        fecha_str_final = "0000-00-00"  # Valor por defecto si falla
+        # --- LÓGICA DE FECHA (MEJORADA) ---
+        fecha_str_final = None
 
+        # 1. Intento: Fecha leída del PDF (Regex)
         if fecha_raw and formato_origen:
             try:
-                # Convertimos string a objeto fecha real
                 objeto_fecha = datetime.strptime(fecha_raw, formato_origen)
-                # Convertimos objeto fecha a string ISO (YYYY-MM-DD)
                 fecha_str_final = objeto_fecha.strftime("%Y-%m-%d")
             except ValueError:
-                # Si la fecha está mal leída o el formato no cuadra
-                fecha_str_final = "FECHA-ERROR"
+                pass  # Falló el formato, pasamos al plan B
 
-        # NUEVO NOMBRE: 2026-01-19_4951667.pdf
+        # 2. Intento: Plan B (Metadatos del archivo)
+        # Si no leímos fecha en el papel, usamos la fecha del archivo digital
+        if not fecha_str_final:
+            fecha_str_final = obtener_fecha_creacion_archivo(ruta_origen)
+            # Añadimos una marca visual para saber que esta fecha es "estimada"
+            # Opcional: podrías añadir un sufijo "_SCAN" si quisieras diferenciarla
+
+        # NUEVO NOMBRE
         nuevo_nombre = f"{fecha_str_final}_{doc_id}.pdf"
 
         # Ruta destino
@@ -40,11 +60,11 @@ def mover_y_renombrar(ruta_origen, datos, carpeta_base_salida):
         dir_final = os.path.join(carpeta_base_salida, subcarpeta)
 
     else:
-        # Fallo -> Revisión Manual
+        # Fallo Crítico (Falta proveedor o ID) -> Revisión Manual
         dir_final = os.path.join(carpeta_base_salida, "Revision_Manual")
         nuevo_nombre = nombre_original
 
-    # --- LÓGICA DE MOVER (Igual que antes) ---
+    # --- LÓGICA DE MOVER ---
     os.makedirs(dir_final, exist_ok=True)
     ruta_destino = os.path.join(dir_final, nuevo_nombre)
 

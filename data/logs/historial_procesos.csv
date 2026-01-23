@@ -34,3 +34,6 @@ Fecha,Archivo Original,Proveedor,Pedido,Estado,Ruta Final
 2026-01-22 05:35:51,ocr.pdf,,N/A,OK,C:\Users\marius.ion\Documents\pdf_classifier_app\data\output\Revision_Manual\ocr_DUPLICADO_8d3b.pdf
 2026-01-22 05:49:25,arch2.pdf,EUROPART,02AL1090,OK,C:\Users\marius.ion\Documents\pdf_classifier_app\data\output\Europart_Albaranes\2026-01-19_02AL1090.pdf
 2026-01-22 05:49:25,ocr.pdf,,N/A,OK,C:\Users\marius.ion\Documents\pdf_classifier_app\data\output\Revision_Manual\ocr_DUPLICADO_4d64.pdf
+2026-01-23 01:46:00,SVIMPRESION19_ZARAGOZA_OFICINA TECNICA_1392_001.pdf,HNTOOLS,2601188,OK,C:\Users\marius.ion\Documents\pdf_classifier_app\data\output\HnTools_Albaranes\2026-01-23_2601188.pdf
+2026-01-23 01:46:00,SVIMPRESION19_ZARAGOZA_OFICINA TECNICA_1393_001.pdf,HNTOOLS,2601251,OK,C:\Users\marius.ion\Documents\pdf_classifier_app\data\output\HnTools_Albaranes\2026-01-23_2601251.pdf
+2026-01-23 03:09:15,SVIMPRESION19_ZARAGOZA_OFICINA TECNICA_1394_001.pdf,GLOBAL_PARTS,01452,OK,C:\Users\marius.ion\Documents\pdf_classifier_app\data\output\GlobalParts_Albaranes\2026-01-21_01452.pdf

@@ -2,7 +2,9 @@ import customtkinter as ctk
 from tkinter import filedialog
 import os
 import threading
+import sys  # Necesario para cerrar la app limpiamente
 
+# Importaciones del Core
 from app.core.pdf_processor import extraer_texto_pdf
 from app.core.parser import analizar_documento
 from app.core.file_manager import mover_y_renombrar
@@ -15,9 +17,9 @@ class PDFClassifierApp(ctk.CTk):
         super().__init__()
 
         # Configuración Ventana
-        self.title("Clasificador Inteligente de Albaranes v0.3")
-        self.geometry("900x650")
-        ctk.set_appearance_mode("Dark")
+        self.title("Clasificador Inteligente - v2.0")
+        self.geometry("950x700")
+        ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
 
         # Variables de estado
@@ -25,13 +27,19 @@ class PDFClassifierApp(ctk.CTk):
         self.output_folder = ctk.StringVar(value=os.path.abspath(DEFAULT_OUTPUT_DIR))
         self.is_running = False
 
-        # --- LAYOUT PRINCIPAL ---
+        # --- LAYOUT PRINCIPAL (Grid 4 filas) ---
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(2, weight=1)
+        self.grid_rowconfigure(2, weight=1)  # El log se expande
 
         # 1. Header
-        self.lbl_title = ctk.CTkLabel(self, text="⚙️ Panel de Control DAM", font=("Roboto Medium", 24))
-        self.lbl_title.grid(row=0, column=0, pady=(20, 10), sticky="ew")
+        self.frame_header = ctk.CTkFrame(self, fg_color="transparent")
+        self.frame_header.grid(row=0, column=0, padx=20, pady=(20, 10), sticky="ew")
+
+        self.lbl_title = ctk.CTkLabel(self.frame_header, text="⚙️ Panel de Control DAM", font=("Roboto Medium", 24))
+        self.lbl_title.pack(side="left")
+
+        self.lbl_version = ctk.CTkLabel(self.frame_header, text="v2.0 Stable", text_color="gray")
+        self.lbl_version.pack(side="right", anchor="s")
 
         # 2. Panel de Control
         self.frame_controls = ctk.CTkFrame(self)
@@ -65,7 +73,7 @@ class PDFClassifierApp(ctk.CTk):
             font=("Roboto", 16, "bold"),
             fg_color="#2CC985",
             hover_color="#229A65",
-            height=50,
+            height=40,
             command=self.start_processing_thread
         )
         self.btn_run.grid(row=2, column=0, columnspan=3, padx=20, pady=(10, 20), sticky="ew")
@@ -73,11 +81,26 @@ class PDFClassifierApp(ctk.CTk):
         # 3. Log
         self.textbox_log = ctk.CTkTextbox(self, font=("Consolas", 12))
         self.textbox_log.grid(row=2, column=0, padx=20, pady=10, sticky="nsew")
-        self.log_message("Sistema listo. Configure las rutas y pulse Iniciar.")
+        self.log_message("Sistema listo v2.0. Esperando archivos...")
 
-        # 4. Status Bar
-        self.lbl_status = ctk.CTkLabel(self, text="Estado: En espera", anchor="w", text_color="gray")
-        self.lbl_status.grid(row=3, column=0, padx=25, pady=(0, 10), sticky="ew")
+        # 4. Footer (Status + Botón Salir)
+        self.frame_footer = ctk.CTkFrame(self, height=40)
+        self.frame_footer.grid(row=3, column=0, padx=20, pady=20, sticky="ew")
+        self.frame_footer.grid_columnconfigure(0, weight=1)
+
+        self.lbl_status = ctk.CTkLabel(self.frame_footer, text="Estado: En espera", anchor="w", text_color="gray")
+        self.lbl_status.grid(row=0, column=0, padx=15, pady=5, sticky="ew")
+
+        # Botón Salir (Rojo y alineado a la derecha)
+        self.btn_exit = ctk.CTkButton(
+            self.frame_footer,
+            text="✖ SALIR",
+            fg_color="#C0392B",
+            hover_color="#E74C3C",
+            width=80,
+            command=self.cerrar_app
+        )
+        self.btn_exit.grid(row=0, column=1, padx=15, pady=5)
 
     # --- FUNCIONES AUXILIARES ---
     def log_message(self, message):
@@ -92,17 +115,22 @@ class PDFClassifierApp(ctk.CTk):
         folder = filedialog.askdirectory()
         if folder: self.output_folder.set(folder)
 
+    def cerrar_app(self):
+        """Cierra la aplicación completamente"""
+        self.destroy()
+        sys.exit()
+
     # --- LÓGICA DE EJECUCIÓN ---
     def start_processing_thread(self):
         if self.is_running: return
         self.is_running = True
         self.btn_run.configure(state="disabled", text="⏳ PROCESANDO...")
+        self.btn_exit.configure(state="disabled")  # No salir mientras procesa
         threading.Thread(target=self.run_processing).start()
 
     def run_processing(self):
-        # 1. Obtenemos las rutas de la interfaz
         input_dir = self.input_folder.get()
-        base_output_dir = self.output_folder.get()  # <--- IMPORTANTE: Leemos la ruta de salida
+        base_output_dir = self.output_folder.get()
 
         if not os.path.exists(input_dir):
             self.log_message(f"❌ Error: Ruta de entrada no existe.")
@@ -130,12 +158,14 @@ class PDFClassifierApp(ctk.CTk):
 
             # FASE 2: Analizar
             datos = analizar_documento(texto)
+
             if datos["proveedor_detectado"]:
-                self.log_message(f"✅ {datos['proveedor_detectado']} -> Doc: {datos['id_documento']}")
+                msg = f"✅ {datos['proveedor_detectado']} | Doc: {datos['id_documento']} | Fecha: {datos['fecha_documento']}"
+                self.log_message(msg)
             else:
                 self.log_message(f"❓ {archivo} -> Proveedor desconocido (Revisión Manual)")
 
-            # FASE 3: Mover (CORREGIDO: Pasamos base_output_dir)
+            # FASE 3: Mover
             exito, ruta_final = mover_y_renombrar(ruta_completa, datos, base_output_dir)
 
             # FASE 4: Log
@@ -148,4 +178,5 @@ class PDFClassifierApp(ctk.CTk):
     def reset_ui(self):
         self.is_running = False
         self.btn_run.configure(state="normal", text="▶ INICIAR PROCESAMIENTO")
+        self.btn_exit.configure(state="normal")
         self.lbl_status.configure(text="Estado: Finalizado")
