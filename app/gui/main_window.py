@@ -19,7 +19,7 @@ class PDFClassifierApp(ctk.CTk):
         super().__init__()
 
         # Configuración Ventana
-        self.title("Clasificador Albaranes - v2.1 (Splitter)")
+        self.title("ClassDoc Engine - v2.1 (Splitter)")
         self.geometry("950x700")
         ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
@@ -37,7 +37,7 @@ class PDFClassifierApp(ctk.CTk):
         self.frame_header = ctk.CTkFrame(self, fg_color="transparent")
         self.frame_header.grid(row=0, column=0, padx=20, pady=(20, 10), sticky="ew")
 
-        self.lbl_title = ctk.CTkLabel(self.frame_header, text="⚙️ Clasificador Albaranes", font=("Roboto Medium", 24))
+        self.lbl_title = ctk.CTkLabel(self.frame_header, text="⚙️ ClassDoc Engine", font=("Roboto Medium", 24))
         self.lbl_title.pack(side="left")
 
         self.lbl_version = ctk.CTkLabel(self.frame_header, text="v2.1 Splitter", text_color="gray")

@@ -1,16 +1,28 @@
 import os
+import sys
 
 # ==========================================
-# CONFIGURACIÓN DE RUTAS SISTEMA
+# CONFIGURACIÓN DE RUTAS (SISTEMA HÍBRIDO)
 # ==========================================
 
-# Detectamos la ruta base del proyecto para no tener errores de "archivo no encontrado"
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Detectamos si estamos corriendo como ejecutable compilado (.exe) o como script (.py)
+if getattr(sys, 'frozen', False):
+    # MODO EXE: La ruta base es la misma carpeta donde está el .exe
+    # (PyInstaller descomprime cosas en _MEIPASS, pero nosotros queremos la carpeta del usuario donde está el .exe)
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    # MODO SCRIPT: La ruta base es subir dos niveles desde este archivo
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Ruta al archivo JSON de base de datos
+# --- DEFINICIÓN DE RUTAS RELATIVAS ---
+
+# Archivo de base de datos
 PROVIDERS_JSON_PATH = os.path.join(BASE_DIR, "data", "proveedores.json")
 
-# Rutas por defecto para archivos
-DEFAULT_INPUT_DIR = os.path.join(BASE_DIR, "data", "output") #cambiar a futuro, Ahora es para hacer pruebas
+# Carpetas de trabajo
+DEFAULT_INPUT_DIR = os.path.join(BASE_DIR, "data", "input")
 DEFAULT_OUTPUT_DIR = os.path.join(BASE_DIR, "data", "output")
 DEFAULT_ERROR_DIR = os.path.join(DEFAULT_OUTPUT_DIR, "Revision_Manual")
+
+# Logs
+LOG_DIR = os.path.join(BASE_DIR, "data", "logs")
