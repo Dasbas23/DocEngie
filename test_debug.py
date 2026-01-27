@@ -7,7 +7,7 @@ from app.core.parser import analizar_documento
 
 # --- CONFIGURACIÓN ---
 # Pon aquí la ruta de tu PDF real de prueba
-RUTA_PDF_PRUEBA = r"C:\Users\Marius\Downloads\SVIMPRESION19_ZARAGOZA_OFICINA TECNICA_1395_001.pdf"
+RUTA_PDF_PRUEBA = r"C:\Users\Marius\Downloads\NO_ocr\Volvo_NO_ocr.pdf"
 
 
 # Colores para la consola (Opcional, pero mola)
@@ -26,7 +26,8 @@ print(f"{Colores.HEADER}--- INICIANDO DEBUGGER DE CLASIFICACIÓN ---{Colores.END
 print(f"Archivo objetivo: {Colores.OKCYAN}{RUTA_PDF_PRUEBA}{Colores.ENDC}")
 
 # 1. Probar lectura
-texto, error = extraer_texto_pdf(RUTA_PDF_PRUEBA)
+texto, error = extraer_texto_pdf(RUTA_PDF_PRUEBA, forzar_ocr=True)
+
 
 if error:
     print(f"{Colores.FAIL}❌ ERROR DE LECTURA: {error}{Colores.ENDC}")

@@ -24,6 +24,18 @@ DEFAULT_INPUT_DIR = os.path.join(BASE_DIR, "data", "input")
 DEFAULT_OUTPUT_DIR = os.path.join(BASE_DIR, "data", "output")
 DEFAULT_ERROR_DIR = os.path.join(DEFAULT_OUTPUT_DIR, "Revision_Manual")
 
+# RUTAS DE MOTORES EXTERNOS (OCR)
+# Ajusta estos nombres según cómo se llamen tus carpetas dentro de 'bin'
+BIN_DIR = os.path.join(BASE_DIR, "bin")
+
+# Ruta al ejecutable de Tesseract
+TESSERACT_CMD = os.path.join(BIN_DIR, "Tesseract-OCR", "tesseract.exe")
+
+# Ruta a la carpeta 'bin' de Poppler (OJO: pdf2image pide la carpeta, no el exe)
+# A veces la carpeta se llama 'Release-24.02.0-0' o similar, ajusta esto:
+POPPLER_PATH = os.path.join(BIN_DIR, "poppler", "Library", "bin")
+# ^^^ VERIFICA ESTA RUTA EN TU EXPLORADOR DE ARCHIVOS ^^^
+
 # Logs
 LOG_DIR = os.path.join(BASE_DIR, "data", "logs")
 
@@ -31,4 +43,4 @@ LOG_DIR = os.path.join(BASE_DIR, "data", "logs")
 TITULO_APP ="⚙️ ClassDoc Engine"
 
 #Versión actual
-VERSION_ACTUAL = "v2.1 (Splitter)"
+VERSION_ACTUAL = "v2.5 (OCR)"

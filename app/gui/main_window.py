@@ -49,7 +49,7 @@ class PDFClassifierApp(ctk.CTk):
         # Título y Versión
         self.lbl_title = ctk.CTkLabel(
             self.frame_header,
-            text=f"🚀 {TITULO_APP}",
+            text=f" {TITULO_APP}",
             font=("Roboto", 26, "bold")
         )
         self.lbl_title.pack(side="left")
@@ -355,7 +355,3 @@ class PDFClassifierApp(ctk.CTk):
         self.log_message(msg_fin)
         self.log_message("━" * 40)
 
-
-if __name__ == "__main__":
-    app = PDFClassifierApp()
-    app.mainloop()

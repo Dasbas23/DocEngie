@@ -146,3 +146,6 @@ Fecha,Archivo Original,Proveedor,Pedido,Estado,Ruta Final
 2026-01-27 19:14:20,SVIMPRESION19_ZARAGOZA_OFICINA TECNICA_1395_001.pdf -> TEMP_Pag7_VOLVO_TRUCKS.pdf,VOLVO_TRUCKS,7360181,OK,C:\Users\Marius\Downloads\borrar\Volvo_Albaranes\2026-01-21_7360181_DUPLICADO_d858.pdf
 2026-01-27 19:14:20,SVIMPRESION19_ZARAGOZA_OFICINA TECNICA_1395_001.pdf -> TEMP_Pag8_RS_TURIA.pdf,RS_TURIA,26009170,OK,C:\Users\Marius\Downloads\borrar\RsTuria_Albaranes\2026-01-21_26009170_DUPLICADO_7db6.pdf
 2026-01-27 19:14:20,SVIMPRESION19_ZARAGOZA_OFICINA TECNICA_1395_001.pdf -> TEMP_Pag9_RS_TURIA.pdf,RS_TURIA,26008535,OK,C:\Users\Marius\Downloads\borrar\RsTuria_Albaranes\2026-01-20_26008535_DUPLICADO_4f26.pdf
+2026-01-27 21:11:06,Volvo_NO_ocr.pdf -> TEMP_Pag0_Desconocido.pdf,VOLVO_TRUCKS,6363017,OK,C:\Users\Marius\Downloads\Volvo_Albaranes\2026-01-27_6363017.pdf
+2026-01-27 21:11:55,MAN_OCR.pdf -> TEMP_Pag0_Desconocido.pdf,,N/A,OK,C:\Users\Marius\Downloads\Revision_Manual\TEMP_Pag0_Desconocido.pdf
+2026-01-27 21:12:06,MAN_OCR.pdf -> TEMP_Pag0_Desconocido.pdf,,N/A,OK,C:\Users\Marius\Downloads\Revision_Manual\TEMP_Pag0_Desconocido_DUPLICADO_dbf7.pdf
