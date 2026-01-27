@@ -26,3 +26,9 @@ DEFAULT_ERROR_DIR = os.path.join(DEFAULT_OUTPUT_DIR, "Revision_Manual")
 
 # Logs
 LOG_DIR = os.path.join(BASE_DIR, "data", "logs")
+
+#Título APP
+TITULO_APP ="⚙️ ClassDoc Engine"
+
+#Versión actual
+VERSION_ACTUAL = "v2.1 (Splitter)"

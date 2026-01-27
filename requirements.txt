@@ -1,3 +1,5 @@
 customtkinter
 pypdf
 packaging
+pytesseract
+pdf2image
