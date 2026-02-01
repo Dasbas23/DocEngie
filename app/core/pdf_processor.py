@@ -44,19 +44,32 @@ def extraer_texto_pdf(ruta_archivo, forzar_ocr=False):
             images = convert_from_path(ruta_archivo, poppler_path=POPPLER_PATH)
 
             texto_completo = ""
-            for img in images:
+
+            # Usamos enumerate para saber el número de página (i)
+            for i, img in enumerate(images):
                 # --- FASE DE MEJORA DE IMAGEN ---
+
                 # 1. Convertir a escala de grises
                 img = img.convert('L')
+
                 # 2. Aumentar contraste
                 enhancer = ImageEnhance.Contrast(img)
-                img = enhancer.enhance(2)
-                # 3. Binarizar (Blanco y negro puro) - Ayuda mucho a Tesseract
-                img = img.point(lambda x: 0 if x < 200 else 255, '1')
+                img = enhancer.enhance(1.5)
+
+                # 3. Binarizar (Blanco y negro puro)
+                # OJO: Aquí estás diciendo que todo lo que no sea casi blanco puro (<200)
+                # se vuelva negro. Es un filtro muy agresivo.
+                img = img.point(lambda x: 0 if x < 128 else 255, '1')
+
+                # ==================================================
+                # 🛠️ DEBUG VISUAL: GUARDAR LA IMAGEN PROCESADA
+                # ==================================================
+                nombre_prueba = f"debug_ocr_pag_{i+3}.png"
+                img.save(nombre_prueba)
+                print(f"   📸 [DEBUG] Imagen procesada guardada como: {nombre_prueba}")
+                # ==================================================
 
                 # --- LECTURA ---
-                # config='--psm 3' (Auto-detectar bloques, bueno para docs torcidos)
-                # lang='spa' es vital si tienes el paquete español instalado
                 texto_pagina = pytesseract.image_to_string(img, lang='spa', config='--psm 3')
                 texto_completo += texto_pagina + "\n"
 
