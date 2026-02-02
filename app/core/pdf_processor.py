@@ -7,7 +7,7 @@ from app.config import TESSERACT_CMD, POPPLER_PATH
 try:
     import pytesseract
     from pdf2image import convert_from_path
-    from PIL import Image, ImageOps, ImageEnhance  # <--- NUEVO
+    from PIL import Image, ImageOps, ImageEnhance, ImageFilter # <--- NUEVO
 
     OCR_AVAILABLE = True
 except ImportError as e:
@@ -28,7 +28,7 @@ def extraer_texto_pdf(ruta_archivo, forzar_ocr=False):
         return None, "Archivo no encontrado"
 
     # ==========================================
-    # MODO 1: OCR VISUAL (MEJORADO V2.6)
+    # MODO 1: OCR VISUAL
     # ==========================================
     if forzar_ocr:
         if not OCR_AVAILABLE:
@@ -51,11 +51,19 @@ def extraer_texto_pdf(ruta_archivo, forzar_ocr=False):
                 # 2. Aumentar contraste
                 enhancer = ImageEnhance.Contrast(img)
                 img = enhancer.enhance(2)
+
+                #Filtro imágen en los bordes
+                img = img.filter(ImageFilter.SHARPEN)
+
                 # 3. Binarizar (Blanco y negro puro) - Ayuda mucho a Tesseract
-                img = img.point(lambda x: 0 if x < 200 else 255, '1')
+                img = img.point(lambda x: 0 if x < 180 else 255, '1')
+
+
 
                 # --- LECTURA ---
                 # config='--psm 3' (Auto-detectar bloques, bueno para docs torcidos)
+                # config='--psm 6' (Bloque uniforme de texto) suele ir mejor para listas/tablas
+                # config='--psm 11' (Texto disperso) a veces encuentra cosas perdidas
                 # lang='spa' es vital si tienes el paquete español instalado
                 texto_pagina = pytesseract.image_to_string(img, lang='spa', config='--psm 3')
                 texto_completo += texto_pagina + "\n"

@@ -1,7 +1,7 @@
 {
     "CBM_IBERICA": {
         "firma": ["ESB85631083", "CBM Iberica"],
-        "patron_documento": "(?:\\d{2}\\/\\s*\\d{2}\\/\\s*\\d{4})[\\s\\S]{0,50}?([\\d\\.\\s]{7,8})",
+        "patron_documento": "\\d{2}\\/\\s*\\d{2}\\/\\s*\\d{4}[\".]?[\\s.\\s]*(\\d{7})",
         "patron_fecha": "(\\d{2}\\/\\s*\\d{2}\\/\\s*\\d{4})",
         "formato_fecha_origen": "%d/%m/%Y",
         "carpeta_destino": "CBM_Albaranes"
@@ -14,16 +14,16 @@
         "carpeta_destino": "Europart_Albaranes"
 },
     "VOLVO_TRUCKS": {
-    "firma": ["B80354962", "Volvo Truck Center", "VOLVO"],
-    "patron_documento": "(?:Fecha:|Pedido:)[\\s\\S]*?(\\d{7,8})",
-    "patron_fecha": "Fecha:[\\s\\S]*?(\\d{2}\\s?\\.\\d{2}\\s?\\.\\d{2})",
-    "formato_fecha_origen": "%d.%m.%y",
-    "carpeta_destino": "Volvo_Albaranes"
+        "firma": ["B80354962", "Volvo Truck Center", "VOLVO"],
+        "patron_documento": "(?:Pedido:)[\\s\\S]*?(\\d{7})",
+        "patron_fecha": "Fecha:[\\s\\S]*?(\\d{2}\\s?\\.\\d{2}\\s?\\.\\d{2})",
+        "formato_fecha_origen": "%d.%m.%y",
+        "carpeta_destino": "Volvo_Albaranes"
 },
     "HNTOOLS": {
         "firma" : ["B-50741040" , "50741040" , "HNTOOLS", "976465540" ,"976 465 540" ],
-        "patron_documento": "ALBAR[AÁ]N[\\s\\S]*?(\\d{7})",
-        "patron_fecha" : "(\\d{2}\\/\\s*\\d{2}\\/\\s*\\d{4})",
+        "patron_documento": "ALBAR[AÁ]N[\\s\\S]*?\\d{2}[/.-]\\s*\\d{2}[/.-]\\s*\\d{4}[\\s\\S]*?(?:[A4]L)?(\\d{7})",
+        "patron_fecha" : "ALBAR[AÁ]N[\\s\\S]*?(\\d{2}[/.-]\\s*\\d{2}[/.-]\\s*\\d{4})[\\s\\S]*?\\d{7}",
         "formato_fecha_origen": "%d/%m/%Y",
         "carpeta_destino": "HnTools_Albaranes"
     },
@@ -36,9 +36,16 @@
     },
     "RS_TURIA": {
         "firma" : ["RSTURIA", "TURIA"],
-        "patron_documento" : "(?i)\\bav\\s*(\\d{8})\\b",
+        "patron_documento" : "(?i)\\b((?:av\\s*)?\\d{8})\\b",
         "patron_fecha" : "(\\d{2}\\/\\s*\\d{2}\\/\\s*\\d{4})",
         "formato_fecha_origen" : "%d/%m/%Y",
         "carpeta_destino" : "RsTuria_Albaranes"
+    },
+    "WURTH": {
+        "firma": ["WURTH","938629500","A08472276"],
+        "patron_documento": "(?:lbar[aá]n)[\\s\\S]*?(\\d{10})",
+        "patron_fecha": "(\\d{2}[/.]\\s*\\d{2}[/.]\\s*\\d{4})",
+        "formato_fecha_origen": "%d/%m/%Y" ,
+        "carpeta_destino": "Wurth_Albaranes"
     }
 }

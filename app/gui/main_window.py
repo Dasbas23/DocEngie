@@ -36,7 +36,7 @@ class PDFClassifierApp(ctk.CTk):
         self.input_folder = ctk.StringVar(value=os.path.abspath(DEFAULT_INPUT_DIR))
         self.output_folder = ctk.StringVar(value=os.path.abspath(DEFAULT_OUTPUT_DIR))
         self.is_running = False
-        self.usar_ocr = ctk.BooleanVar(value=False)
+        self.usar_ocr = ctk.BooleanVar(value=True)
 
         # --- LAYOUT PRINCIPAL (GRID) ---
         self.grid_columnconfigure(0, weight=1)
@@ -284,11 +284,14 @@ class PDFClassifierApp(ctk.CTk):
 
                 # 1. DIVIDIR (SPLITTER)
                 try:
-                    # Si 'dividir_pdf_por_proveedor' no está importado (fallback), esto fallará controlado
-                    if 'dividir_pdf_por_proveedor' in globals():
-                        sub_archivos = dividir_pdf_por_proveedor(ruta_completa_origen, temp_split_dir)
+                    if dividir_pdf_por_proveedor:
+                        # [CAMBIO] Ahora pasamos el argumento usar_ocr
+                        sub_archivos = dividir_pdf_por_proveedor(
+                            ruta_completa_origen,
+                            temp_split_dir,
+                            usar_ocr=usar_ocr_activo  # <--- AQUÍ ESTÁ LA CLAVE
+                        )
                     else:
-                        # Fallback simple para pruebas UI sin core
                         sub_archivos = [ruta_completa_origen]
                 except Exception as e:
                     self.log_message(f"💥 Error crítico dividiendo {archivo}: {e}")
@@ -303,7 +306,7 @@ class PDFClassifierApp(ctk.CTk):
                     try:
                         # Asumiendo que extraer_texto_pdf fue actualizado para aceptar el argumento
                         # Si tu función core no acepta argumentos, elimina 'forzar_ocr=usar_ocr_activo'
-                        texto, error = extraer_texto_pdf(sub_ruta)
+                        texto, error = extraer_texto_pdf(sub_ruta, forzar_ocr=usar_ocr_activo)
                     except TypeError:
                         # Si la función del core antigua no acepta el parametro OCR, lo llamamos normal
                         texto, error = extraer_texto_pdf(sub_ruta)

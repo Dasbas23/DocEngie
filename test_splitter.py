@@ -4,7 +4,7 @@ from app.core.splitter import dividir_pdf_por_proveedor
 
 # --- CONFIGURACIÓN ---
 # Ruta a tu PDF Frankenstein
-PDF_MASIVO = r"C:\Users\Marius\Downloads\SVIMPRESION19_ZARAGOZA_OFICINA TECNICA_1395_001.pdf"
+PDF_MASIVO = r"C:\Users\marius.ion\Downloads\test\SVIMPRESION19_ZARAGOZA_OFICINA TECNICA_1411_001.pdf"
 CARPETA_TEMP = "data/temp_split"
 
 # Limpieza previa (opcional)
