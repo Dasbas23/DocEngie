@@ -1,84 +1,61 @@
-📂 Clasificador Inteligente de Albaranes (PDF Auto-Classifier)
+# 📂 DocEngie | Intelligent Document Classifier
 
-Proyecto Final DAM | Automatización de procesos administrativos mediante Python, Regex y Procesamiento de Documentos.
+![Status](https://img.shields.io/badge/Status-Production_Ready-success) ![Python](https://img.shields.io/badge/Python-3.14-blue) ![OCR](https://img.shields.io/badge/OCR-Tesseract%2FNative-orange)
 
-📖 Descripción
+> **Solución de escritorio High-Performance para la automatización administrativa.** Procesa, clasifica y renombra documentación empresarial mediante un pipeline híbrido de OCR y Expresiones Regulares.
 
-Esta aplicación de escritorio automatiza la tediosa tarea de clasificar cientos de albaranes y facturas escaneadas.
-El sistema lee PDFs nativos, identifica al proveedor mediante huellas digitales únicas (CIF/NIF), extrae metadatos clave (Nº Documento y Fecha) y renombra los archivos siguiendo el estándar ISO 8601, moviéndolos a su carpeta correspondiente.
+## 📖 Descripción del Problema & Solución
+En entornos administrativos, la clasificación manual de albaranes consume horas y genera errores humanos. **DocEngie** actúa como un robot ofimático que:
+1.  **Ingesta** archivos PDF (nativos o escaneados).
+2.  **Aplica OCR/Parsing** para entender el contenido.
+3.  **Detecta proveedores** mediante huellas digitales (CIF/NIF/Keywords).
+4.  **Renombra y Mueve** los archivos siguiendo el estándar ISO 8601.
 
-Problema que resuelve: Elimina el error humano y reduce horas de trabajo manual en departamentos de logística/contabilidad.
+## 🚀 Ingeniería y Características Clave (The Flex)
 
-🚀 Características Clave (Technical Highlights)
+### 🧠 Pipeline Híbrido de Extracción (OCR + Native)
+A diferencia de soluciones simples, DocEngie implementa un sistema inteligente de lectura:
+* **Intento 1 (Fast-Path):** Intenta extracción nativa ultrarrápida (0.1s) para PDFs digitales.
+* **Intento 2 (Deep-Scan):** Si el PDF es una imagen escaneada, activa el motor **OCR** para "leer" los píxeles, garantizando que ningún documento se quede sin procesar.
 
-⚡ Motor Ligero (Zero-Binary Dependency): Migrado de OCR pesado (Tesseract) a extracción nativa con pypdf, reduciendo el tiempo de proceso de 3s a 0.1s por archivo.
+### 🧵 Arquitectura Concurrente (Non-Blocking UI)
+Implementación de **Multithreading** para desacoplar la lógica de procesamiento (CPU Bound) del hilo de la interfaz gráfica (Main Loop).
+* *Resultado:* La interfaz `customtkinter` nunca se congela, incluso procesando lotes de 500+ documentos, manteniendo una barra de progreso fluida en tiempo real.
 
-🧠 Configuración Dinámica (Hot-Swap): Las reglas de negocio (Regex de proveedores) están desacopladas en data/proveedores.json. Se pueden añadir nuevos proveedores sin tocar el código fuente.
+### 🧩 Configuración "Hot-Swap"
+Las reglas de negocio no están "hardcodeadas".
+* Se utiliza un motor de reglas basado en `JSON` externo.
+* Permite añadir nuevos proveedores o cambiar Regex de detección **sin recompilar** ni detener el software.
 
-🧵 Interfaz Reactiva: Implementación de Threading para separar la carga de trabajo (Backend) del hilo de la interfaz (Frontend), evitando congelamientos (UI Freezing).
+## 🛠️ Stack Tecnológico
 
-🛡️ Estrategia de Parsing "Doble Ancla": Algoritmo robusto que localiza datos basándose en la estructura tabular y fechas, limpiando "ruido" típico de OCR (espacios fantasma, puntos extra).
+| Capa | Tecnología | Descripción |
+| :--- | :--- | :--- |
+| **Core** | Python 3.14 | Lógica principal y orquestación. |
+| **GUI** | CustomTkinter | Wrapper moderno de Tcl/Tk para Modo Oscuro/Light nativo. |
+| **Visión** | Tesseract / PyPDF | Motor de reconocimiento óptico y parsing de estructuras. |
+| **Pattern** | Regex Avanzado | Algoritmos de "Doble Ancla" para localizar fechas y CIFs con ruido. |
+| **Build** | PyInstaller | Compilación a binario `.exe` standalone (sin dependencias para el cliente). |
 
-🛠️ Stack Tecnológico
+## ⚙️ Flujo de Trabajo (Workflow)
+1.  **Input:** Selección de carpeta origen (mezcla de imágenes y PDFs).
+2.  **Splitting:** Si llega un PDF multipágina, se atomiza en hojas individuales.
+3.  **Processing:** * Extracción de metadatos (Proveedor, Nº Albarán, Fecha).
+    * *Fallback:* Si falla la fecha, se usa `SysDate` con flag de advertencia.
+4.  **Output:** * ✅ Éxito: Renombrado `YYYY-MM-DD_Proveedor_NDoc.pdf` -> Carpeta Destino.
+    * ⚠️ Fallo: Carpeta `revisión_manual` para auditoría humana (Logs generados).
 
-Lenguaje: Python 3.14
-
-Interfaz (GUI): customtkinter (Wrapper moderno de Tcl/Tk)
-
-Procesamiento PDF: pypdf
-
-Lógica de Negocio: Expresiones Regulares (Regex) avanzadas.
-
-Gestión de Archivos: shutil, os, pathlib.
-
-📂 Arquitectura del Proyecto
-
-El proyecto sigue una arquitectura modular (Clean Architecture simplificada) para facilitar la escalabilidad y el mantenimiento:
-
-pdf_classifier_app/
-├── app/
-│   ├── core/           # Lógica de Negocio Pura (Backend)
-│   │   ├── parser.py           # Motor de análisis Regex
-│   │   ├── pdf_processor.py    # Extracción de texto raw
-│   │   └── provider_manager.py # CRUD de reglas JSON
-│   ├── gui/            # Interfaz de Usuario (Frontend)
-│   │   └── main_window.py      # Lógica de la ventana principal
-│   └── utils/          # Herramientas transversales (Logger, CSV)
-├── data/               # Persistencia y Configuración
-│   ├── input/          # Bandeja de entrada (simulada)
-│   ├── output/         # Salida clasificada
-│   └── proveedores.json # Base de datos de reglas
-└── main.py             # Punto de entrada (Entry Point)
-
-
-⚙️ Instalación y Uso
-
-Clonar el repositorio:
-
-git clone [https://github.com/tu-usuario/pdf-classifier.git](https://github.com/tu-usuario/pdf-classifier.git)
-cd pdf-classifier
-
-
-Instalar dependencias:
-
-pip install -r requirements.txt
-
-
-Ejecutar:
-
-python main.py
-
-
-Configuración de Proveedores:
-Edita el archivo data/proveedores.json para añadir nuevas reglas de regex para tus facturas.
-
-📈 Roadmap
-
-[x] v1.0: MVP con Tesseract (Deprecated).
-
-[x] v1.1: Migración a pypdf y Configuración JSON externa.
-
-[ ] v2.0: Compilación a .EXE portable y Editor Visual de Reglas.
-
-Autor: Marius Ion
-Desarrollado como parte del Grado Superior en Desarrollo de Aplicaciones Multiplataforma (DAM).
+## 📂 Estructura del Proyecto (Clean Architecture)
+```text
+DocEngie/
+├── core/                   # Backend Logic
+│   ├── engine_ocr.py       # Wrapper de visión artificial
+│   ├── regex_parser.py     # Lógica de extracción de datos
+│   └── file_manager.py     # Operaciones OS (shutil/pathlib)
+├── gui/                    # Frontend Logic
+│   ├── workers.py          # Hilos en segundo plano (Background Tasks)
+│   └── components.py       # Widgets personalizados
+├── data/
+│   ├── rules/proveedores.json  # Reglas dinámicas
+│   └── logs/               # Registro de operaciones
+└── main.py                 # Entry Point
