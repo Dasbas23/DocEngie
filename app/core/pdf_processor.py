@@ -52,7 +52,7 @@ def extraer_texto_pdf(ruta_archivo, forzar_ocr=False):
                 enhancer = ImageEnhance.Contrast(img)
                 img = enhancer.enhance(2)
                 # 3. Binarizar (Blanco y negro puro) - Ayuda mucho a Tesseract
-                img = img.point(lambda x: 0 if x < 200 else 255, '1')
+                img = img.point(lambda x: 0 if x < 180 else 255, '1')
 
                 # --- LECTURA ---
                 # config='--psm 3' (Auto-detectar bloques, bueno para docs torcidos)
