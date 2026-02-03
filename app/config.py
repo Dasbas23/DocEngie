@@ -42,4 +42,4 @@ LOG_DIR = os.path.join(BASE_DIR, "data", "logs")
 TITULO_APP ="⚙️ ClassDoc Engine"
 
 #Versión actual
-VERSION_ACTUAL = "v2.5 (OCR)"
+VERSION_ACTUAL = "v2.6 (OCR_Paddle)"
