@@ -49,7 +49,7 @@
         "carpeta_destino": "Wurth_Albaranes"
     },
     "AGREDA": {
-        "firma": ["Agreda","A99378929","976413900"],
+        "firma": ["Agreda"],
         "patron_documento": "(?:DOCUMENTO:)[\\s\\S]*?(\\d{6})",
         "patron_fecha": "(\\d{2}[/.]\\s*\\d{2}[/.]\\s*\\d{4})",
         "formato_fecha_origen": "%d/%m/%Y" ,

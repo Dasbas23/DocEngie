@@ -5,7 +5,7 @@ from app.config import POPPLER_PATH
 
 # --- CONFIGURACIÓN ---
 # Pon aquí el PDF de Europart que te da problemas
-RUTA_PDF = r"C:\Users\marius.ion\Downloads\test\Revision_Manual\SPLIT_Pag1_HNTOOLS.pdf"
+RUTA_PDF = r"C:\Users\Marius\Downloads\test10p\SVIMPRESION19_ZARAGOZA_OFICINA TECNICA_1312_001.pdf"
 CARPETA_SALIDA = os.path.join(os.path.dirname(os.path.abspath(RUTA_PDF)),"debug_vision")
 
 if not os.path.exists(RUTA_PDF):
@@ -38,7 +38,7 @@ try:
 
     # Paso 3: Binarización (El culpable probable)
     # Tu valor actual es 200. Probamos varios para que elijas el mejor.
-    umbrales = [10,15,20,25,30,35,40,45,50]
+    umbrales = [10,150,180,250]
 
     print("\n🧪 Generando pruebas de umbralización...")
     for umbral in umbrales:

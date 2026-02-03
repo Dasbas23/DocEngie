@@ -7,7 +7,7 @@ from app.core.parser import analizar_documento
 
 # --- CONFIGURACIÓN ---
 # Pon aquí la ruta de tu PDF real de prueba
-RUTA_PDF_PRUEBA = r"C:\Users\marius.ion\Downloads\test\Revision_Manual\SPLIT_Pag0_HNTOOLS_DUPLICADO_4a27.pdf"
+RUTA_PDF_PRUEBA = r"C:\Users\Marius\Downloads\pag1.pdf"
 
 
 # Colores para la consola (Opcional, pero mola)
