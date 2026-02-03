@@ -55,8 +55,10 @@ def extraer_texto_pdf(ruta_archivo, forzar_ocr=False):
                 #Filtro imágen en los bordes
                 img = img.filter(ImageFilter.SHARPEN)
 
-                # 3. Binarizar (Blanco y negro puro) - Ayuda mucho a Tesseract
-                img = img.point(lambda x: 0 if x < 180 else 255, '1')
+                # [CRÍTICO] Umbral 10 descubierto en pruebas.
+                # Elimina fondos grises (Europart) dejando solo tinta negra fuerte.
+                UMBRAL_CORTE = 10
+                img = img.point(lambda x: 0 if x < UMBRAL_CORTE else 255, '1')
 
 
 
