@@ -1,7 +1,10 @@
 import csv
+import logging
 import os
 from datetime import datetime
-from app.config import BASE_DIR  # <-- Importamos la ruta base segura
+from app.config import BASE_DIR
+
+logger = logging.getLogger(__name__)
 
 # Construimos la ruta absoluta: .../pdf_classifier_app/data/logs/historial.csv
 LOG_DIR = os.path.join(BASE_DIR, "data", "logs")
@@ -39,4 +42,4 @@ def registrar_evento(origen, resultado_analisis, ruta_final, exito_movimiento):
             writer = csv.writer(file)
             writer.writerow([fecha, archivo_orig, prov, doc_id, estado, ruta_final])
     except Exception as e:
-        print(f"❌ Error crítico escribiendo log: {e}")
+        logger.error(f"Error crítico escribiendo log: {e}")

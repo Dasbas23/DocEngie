@@ -4,7 +4,6 @@ import os
 import threading
 import sys
 import shutil
-import time
 from app.core.pdf_processor import extraer_texto_pdf
 from app.core.parser import analizar_documento
 from app.core.file_manager import mover_y_renombrar
@@ -143,7 +142,7 @@ class PDFClassifierApp(ctk.CTk):
         self.frame_log.grid_rowconfigure(1, weight=1)
         self.frame_log.grid_columnconfigure(0, weight=1)
 
-        ctk.CTkLabel(self.frame_log, text="📟 REGISTRO DE EVENTOS", font=("Roboto", 12, "bold")).grid(row=0, column=0,
+        ctk.CTkLabel(self.frame_log, text="REGISTRO DE EVENTOS", font=("Roboto", 12, "bold")).grid(row=0, column=0,
                                                                                                      sticky="w",
                                                                                                      pady=(0, 5))
 
@@ -175,7 +174,7 @@ class PDFClassifierApp(ctk.CTk):
         # Botón Salir (Estilo V2)
         self.btn_exit = ctk.CTkButton(
             self.frame_footer,
-            text="✖ SALIR",
+            text="SALIR",
             font=("Roboto", 14, "bold"),
             fg_color=COLOR_DANGER,
             hover_color="#E74C3C",
@@ -199,7 +198,6 @@ class PDFClassifierApp(ctk.CTk):
             self.entry_in.configure(fg_color="white", text_color="black")
             self.entry_out.configure(fg_color="white", text_color="black")
             self.switch_tema.configure(text="Modo Claro")
-            # El texto naranja del OCR se lee bien en blanco, pero podemos oscurecerlo un poco
             self.check_ocr.configure(text_color="#D35400")
         else:
             self.frame_config.configure(fg_color=COLOR_CARD_DARK)
@@ -211,10 +209,16 @@ class PDFClassifierApp(ctk.CTk):
 
     def log_message(self, message):
         """ Escribe en el log y hace autoscroll """
-        # Desbloqueamos temporalmente si quisieramos hacerlo read-only estricto,
-        # pero por simplicidad de V1 dejamos escribir directo
         self.textbox_log.insert("end", f">> {message}\n")
         self.textbox_log.see("end")
+
+    def _log_safe(self, message):
+        """ Versión thread-safe de log_message (para uso desde worker threads) """
+        self.after(0, self.log_message, message)
+
+    def _status_safe(self, text):
+        """ Actualiza la etiqueta de estado de forma thread-safe """
+        self.after(0, lambda: self.lbl_status.configure(text=text))
 
     def select_input(self):
         """ Permite ver archivos en las carpetas de entrada """
@@ -229,7 +233,7 @@ class PDFClassifierApp(ctk.CTk):
             self.input_folder.set(folder)
 
             #Escribir en el log que carpeta se ha detectado
-            self.log_message(f"📂 Carpeta origen seleccionada: {folder}")
+            self.log_message(f"Carpeta origen seleccionada: {folder}")
 
     def select_output(self):
         folder = filedialog.askdirectory()
@@ -247,11 +251,11 @@ class PDFClassifierApp(ctk.CTk):
 
         # Validaciones básicas
         if not os.path.exists(self.input_folder.get()):
-            self.log_message("❌ Error: Comprueba la carpeta de origen, no existe.")
+            self.log_message("Error: Comprueba la carpeta de origen, no existe.")
             return
 
         self.is_running = True
-        self.btn_run.configure(state="disabled", text="⏳ PROCESANDO...", fg_color="#7f8c8d")
+        self.btn_run.configure(state="disabled", text="PROCESANDO...", fg_color="#7f8c8d")
 
         # Iniciar hilo
         threading.Thread(target=self.run_processing, daemon=True).start()
@@ -264,11 +268,11 @@ class PDFClassifierApp(ctk.CTk):
 
         archivos_origen = [f for f in os.listdir(input_dir) if f.lower().endswith(".pdf")]
 
-        self.log_message("━" * 40)
-        self.log_message(f"🚀 INICIO DE PROCESO | Archivos: {len(archivos_origen)}")
+        self._log_safe("=" * 40)
+        self._log_safe(f"INICIO DE PROCESO | Archivos: {len(archivos_origen)}")
         if usar_ocr_activo:
-            self.log_message(f"👁️ MODO OCR EXTENDIDO: ACTIVADO. Puede tardar unos segundos")
-        self.lbl_status.configure(text="Estado: Procesando lotes...")
+            self._log_safe("MODO OCR EXTENDIDO: ACTIVADO. Puede tardar unos segundos")
+        self._status_safe("Estado: Procesando lotes...")
 
         procesados_finales = 0
         errores = 0
@@ -280,21 +284,19 @@ class PDFClassifierApp(ctk.CTk):
         try:
             for archivo in archivos_origen:
                 ruta_completa_origen = os.path.join(input_dir, archivo)
-                self.lbl_status.configure(text=f"Procesando: {archivo}...")
+                self._status_safe(f"Procesando: {archivo}...")
 
                 # 1. DIVIDIR (SPLITTER)
                 try:
-                    if dividir_pdf_por_proveedor:
-                        # [CAMBIO] Ahora pasamos el argumento usar_ocr
-                        sub_archivos = dividir_pdf_por_proveedor(
-                            ruta_completa_origen,
-                            temp_split_dir,
-                            usar_ocr=usar_ocr_activo  # <--- AQUÍ ESTÁ LA CLAVE
-                        )
-                    else:
+                    sub_archivos = dividir_pdf_por_proveedor(
+                        ruta_completa_origen,
+                        temp_split_dir,
+                        usar_ocr=usar_ocr_activo
+                    )
+                    if not sub_archivos:
                         sub_archivos = [ruta_completa_origen]
                 except Exception as e:
-                    self.log_message(f"💥 Error crítico dividiendo {archivo}: {e}")
+                    self._log_safe(f"Error critico dividiendo {archivo}: {e}")
                     errores += 1
                     continue
 
@@ -302,17 +304,11 @@ class PDFClassifierApp(ctk.CTk):
                 for sub_ruta in sub_archivos:
                     nombre_sub = os.path.basename(sub_ruta)
 
-                    # A) Leer (Pasamos forzar_ocr si la función lo soporta)
-                    try:
-                        # Asumiendo que extraer_texto_pdf fue actualizado para aceptar el argumento
-                        # Si tu función core no acepta argumentos, elimina 'forzar_ocr=usar_ocr_activo'
-                        texto, error = extraer_texto_pdf(sub_ruta, forzar_ocr=usar_ocr_activo)
-                    except TypeError:
-                        # Si la función del core antigua no acepta el parametro OCR, lo llamamos normal
-                        texto, error = extraer_texto_pdf(sub_ruta)
+                    # A) Leer
+                    texto, error = extraer_texto_pdf(sub_ruta, forzar_ocr=usar_ocr_activo)
 
                     if error:
-                        self.log_message(f"   ⚠️ Error lectura {nombre_sub}: {error}")
+                        self._log_safe(f"   Error lectura {nombre_sub}: {error}")
                         errores += 1
                         continue
 
@@ -320,10 +316,10 @@ class PDFClassifierApp(ctk.CTk):
                     datos = analizar_documento(texto)
 
                     if datos.get("proveedor_detectado"):
-                        self.log_message(
-                            f"   ✅ {datos['proveedor_detectado']} | Doc: {datos.get('id_documento', 'N/A')}")
+                        self._log_safe(
+                            f"   OK: {datos['proveedor_detectado']} | Doc: {datos.get('id_documento', 'N/A')}")
                     else:
-                        self.log_message(f"   ❓ {nombre_sub} -> Desconocido")
+                        self._log_safe(f"   Desconocido: {nombre_sub}")
 
                     # C) Mover
                     exito, ruta_final = mover_y_renombrar(sub_ruta, datos, base_output_dir)
@@ -333,30 +329,28 @@ class PDFClassifierApp(ctk.CTk):
                     procesados_finales += 1
 
         except Exception as e:
-            self.log_message(f"❌ ERROR GENERAL: {str(e)}")
+            self._log_safe(f"ERROR GENERAL: {str(e)}")
         finally:
             # Limpieza
             if os.path.exists(temp_split_dir):
                 try:
                     shutil.rmtree(temp_split_dir)
-                except:
+                except Exception:
                     pass
 
-            self.reset_ui(procesados_finales, errores)
+            self.after(0, self.reset_ui, procesados_finales, errores)
 
     def reset_ui(self, procesados=0, errores=0):
         """ Restaura la interfaz al terminar el hilo """
         self.is_running = False
 
-        # Debemos usar after para modificar UI desde hilo de forma segura,
-        # aunque CTK suele tolerarlo, es buena práctica o hacerlo directo si no falla.
         self.btn_run.configure(state="normal", text="▶ INICIAR PROCESAMIENTO", fg_color=COLOR_SUCCESS)
         self.btn_exit.configure(state="normal")
 
-        msg_fin = f"🏁 Finalizado. Docs: {procesados} | Errores: {errores}"
+        msg_fin = f"Finalizado. Docs: {procesados} | Errores: {errores}"
         self.lbl_status.configure(text=msg_fin)
         self.log_message(msg_fin)
-        self.log_message("━" * 40)
+        self.log_message("=" * 40)
 
 if __name__ == "__main__":
     app = PDFClassifierApp()

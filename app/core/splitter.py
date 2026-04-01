@@ -1,18 +1,12 @@
-from pypdf import PdfReader, PdfWriter
-from app.core.parser import analizar_documento
-from app.config import  POPPLER_PATH
+import logging
 import os
 
-# Importación condicional para OCR
-try:
-    from paddleocr import PaddleOCR
-    import numpy as np
-    from pdf2image import convert_from_path
+from pypdf import PdfReader, PdfWriter
+from app.core.parser import analizar_documento
+from app.config import POPPLER_PATH
+from app.core.ocr_engine import ocr_engine, OCR_AVAILABLE, convert_from_path, np
 
-    ocr_engine = PaddleOCR(use_angle_cls=True, lang='es')
-    OCR_AVAILABLE = True
-except ImportError:
-    OCR_AVAILABLE = False
+logger = logging.getLogger(__name__)
 
 
 def dividir_pdf_por_proveedor(ruta_pdf_masivo, carpeta_temporal, usar_ocr=False):
@@ -29,7 +23,7 @@ def dividir_pdf_por_proveedor(ruta_pdf_masivo, carpeta_temporal, usar_ocr=False)
     try:
         reader = PdfReader(ruta_pdf_masivo)
     except Exception as e:
-        print(f"❌ Error abriendo lote PDF: {e}")
+        logger.error(f"Error abriendo lote PDF: {e}")
         return []
 
     archivos_generados = []
@@ -38,25 +32,22 @@ def dividir_pdf_por_proveedor(ruta_pdf_masivo, carpeta_temporal, usar_ocr=False)
     proveedor_actual = "Desconocido"
     pagina_inicio_actual = 0
 
-
-
     os.makedirs(carpeta_temporal, exist_ok=True)
 
     total_paginas = len(reader.pages)
-    print(f"🔄 Analizando lote masivo de {total_paginas} páginas (OCR={usar_ocr})...")
+    logger.info(f"Analizando lote masivo de {total_paginas} páginas (OCR={usar_ocr})...")
 
     for i, page in enumerate(reader.pages):
         # 1. Intentar extracción nativa (Rápida)
         try:
             text = page.extract_text() or ""
-        except:
+        except Exception:
             text = ""
 
         # 2. Si no hay texto y el OCR está activado, mirar la imagen (Lento)
         if not text.strip() and usar_ocr and OCR_AVAILABLE:
             try:
                 # Convertimos SOLO esta página a imagen (índices 1-based)
-                # Esto evita convertir todo el PDF cada vez
                 imagenes = convert_from_path(
                     ruta_pdf_masivo,
                     first_page=i + 1,
@@ -64,14 +55,13 @@ def dividir_pdf_por_proveedor(ruta_pdf_masivo, carpeta_temporal, usar_ocr=False)
                     poppler_path=POPPLER_PATH
                 )
                 for img in imagenes:
-                    # Convertir a numpy e inferir con PaddleOCR
                     img_array = np.array(img)
-                    resultados = ocr_engine.ocr(img_array) #salta problema en ocr_engie
+                    resultados = ocr_engine.ocr(img_array)
                     if resultados and resultados[0]:
                         for linea in resultados[0]:
                             text += linea[1][0] + "\n"
             except Exception as e:
-                print(f"   ⚠️ Fallo OCR en página {i + 1} del splitter: {e}")
+                logger.warning(f"Fallo OCR en página {i + 1} del splitter: {e}")
 
         # 3. Analizar: ¿Hay firma de algún proveedor conocido?
         analisis = analizar_documento(text)
@@ -81,7 +71,7 @@ def dividir_pdf_por_proveedor(ruta_pdf_masivo, carpeta_temporal, usar_ocr=False)
         if nuevo_proveedor:
             # ¡HAY FIRMA! -> PORTADA
             if writer_actual:
-                print(f"   ✂️ Corte en pág {i + 1}. Fin del doc anterior ({proveedor_actual}).")
+                logger.info(f"Corte en pág {i + 1}. Fin del doc anterior ({proveedor_actual}).")
                 ruta = _guardar_fragmento(writer_actual, proveedor_actual, pagina_inicio_actual, carpeta_temporal)
                 archivos_generados.append(ruta)
 
@@ -106,7 +96,7 @@ def dividir_pdf_por_proveedor(ruta_pdf_masivo, carpeta_temporal, usar_ocr=False)
     if writer_actual:
         ruta = _guardar_fragmento(writer_actual, proveedor_actual, pagina_inicio_actual, carpeta_temporal)
         archivos_generados.append(ruta)
-        print(f"   🏁 Guardado bloque final ({proveedor_actual}).")
+        logger.info(f"Guardado bloque final ({proveedor_actual}).")
 
     return archivos_generados
 

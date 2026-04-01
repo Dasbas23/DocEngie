@@ -1,28 +1,18 @@
-from pypdf import PdfReader
+import logging
 import os
-import sys
+
+from pypdf import PdfReader
 from app.config import POPPLER_PATH
-import numpy as np  # <--- NUEVO
+from app.core.ocr_engine import ocr_engine, OCR_AVAILABLE, convert_from_path, np
 
-# Importación condicional para PaddleOCR
-try:
-    from pdf2image import convert_from_path
-    from paddleocr import PaddleOCR  # <--- NUEVO
-
-    # INICIALIZACIÓN GLOBAL (Importante para que no cargue el modelo en cada archivo)
-    # use_angle_cls=True auto-rota el texto. show_log=False quita el spam de la consola.
-    ocr_engine = PaddleOCR(use_angle_cls=True, lang='es')
-    OCR_AVAILABLE = True
-except ImportError as e:
-    print(f"⚠️ AVISO DEBUG: Falló la importación de OCR. Causa: {e}")
-    OCR_AVAILABLE = False
+logger = logging.getLogger(__name__)
 
 
 def extraer_texto_pdf(ruta_archivo, forzar_ocr=False):
     """
     Extrae texto del PDF.
     - Modo Rápido (Default): Usa pypdf.
-    - Modo OCR: Usa Tesseract + Pre-procesamiento de imagen.
+    - Modo OCR: Usa PaddleOCR + Pre-procesamiento de imagen.
     """
     if not os.path.exists(ruta_archivo):
         return None, "Archivo no encontrado"
@@ -33,10 +23,11 @@ def extraer_texto_pdf(ruta_archivo, forzar_ocr=False):
     if forzar_ocr:
         if not OCR_AVAILABLE:
             return None, "Librerías OCR no instaladas."
-        if not os.path.exists(POPPLER_PATH): return None, f"❌ Falta Poppler: {POPPLER_PATH}"
+        if not os.path.exists(POPPLER_PATH):
+            return None, f"Falta Poppler: {POPPLER_PATH}"
 
         try:
-            print(f"   👁️ Motor Deep Learning arrancando... (Procesando imagen)")
+            logger.info("Motor Deep Learning arrancando... (Procesando imagen)")
             images = convert_from_path(ruta_archivo, poppler_path=POPPLER_PATH)
 
             texto_completo = ""
@@ -69,12 +60,13 @@ def extraer_texto_pdf(ruta_archivo, forzar_ocr=False):
         if reader.is_encrypted:
             try:
                 reader.decrypt("")
-            except:
+            except Exception:
                 return None, "PDF Encriptado"
 
         for page in reader.pages:
             t = page.extract_text()
-            if t: texto_completo += t + "\n"
+            if t:
+                texto_completo += t + "\n"
 
         if len(texto_completo.strip()) < 10:
             return None, "PDF vacío o imagen (Activa OCR)"

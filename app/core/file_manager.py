@@ -15,7 +15,7 @@ def obtener_fecha_creacion_archivo(ruta_archivo):
         timestamp = os.path.getmtime(ruta_archivo)
         fecha_obj = datetime.fromtimestamp(timestamp)
         return fecha_obj.strftime("%Y-%m-%d")
-    except:
+    except Exception:
         return "0000-00-00"
 
 
@@ -47,7 +47,7 @@ def mover_y_renombrar(ruta_origen, datos, carpeta_base_salida):
             formatos_posibles = [
                 "%d/%m/%Y",  # 28/05/2025 (El más común)
                 "%d/%m/%y",  # 28/05/25   (Año corto)
-                "%Y/%m/%d"  # 2025/05/28 (Formato ISO con barras)
+                "%Y/%m/%d"   # 2025/05/28 (Formato ISO con barras)
             ]
 
             for fmt in formatos_posibles:
@@ -58,12 +58,11 @@ def mover_y_renombrar(ruta_origen, datos, carpeta_base_salida):
                 except ValueError:
                     continue  # Si falla, probamos el siguiente formato
 
-            # 2. Intento: Plan B (Metadatos del archivo)
-            # Si la lectura falló o no coincide con ninguna fecha lógica
+        # Plan B: Metadatos del archivo si la lectura falló
         if not fecha_str_final:
             fecha_str_final = obtener_fecha_creacion_archivo(ruta_origen)
 
-            # NUEVO NOMBRE
+        # NUEVO NOMBRE
         nuevo_nombre = f"{fecha_str_final}_{doc_id}.pdf"
 
         # Ruta destino
