@@ -9,7 +9,7 @@ import os
 # que causa "ConvertPirAttribute2RuntimeAttribute not support" en CPU.
 # Desactivar oneDNN evita el crash. Debe estar ANTES de importar paddle.
 # Ref: https://github.com/PaddlePaddle/Paddle/issues/77340
-os.environ.setdefault("FLAGS_use_mkldnn", "0")
+#***os.environ.setdefault("FLAGS_use_mkldnn", "0")
 
 logger = logging.getLogger(__name__)
 
