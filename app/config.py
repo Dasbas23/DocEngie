@@ -51,4 +51,4 @@ LOG_DIR = os.path.join(BASE_DIR, "data", "logs")
 TITULO_APP ="⚙️ Doc Engine"
 
 #Versión actual
-VERSION_ACTUAL = "v2.6 (OCR)"
+VERSION_ACTUAL = "v2.7 (Splitter+)"
