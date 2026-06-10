@@ -13,6 +13,56 @@ except ImportError:
     OCR_AVAILABLE = False
 
 
+def agrupar_paginas(analisis_por_pagina):
+    """
+    Decide los cortes de un lote a partir del análisis de cada página.
+
+    Entrada: [{"proveedor": str|None, "id_documento": str|None}, ...]
+    Salida:  [{"paginas": [índices], "proveedor": str, "id_documento": str|None}, ...]
+
+    Reglas:
+    - Sin proveedor detectado -> continuación del documento abierto
+      (o huérfano "Desconocido" si no hay ninguno abierto).
+    - Proveedor distinto al abierto -> corte.
+    - Mismo proveedor con nº de documento distinto o ilegible -> corte.
+      (Los documentos reales son de 1-2 páginas; cuando la cabecera se
+      repite, el nº casi siempre se repite con ella.)
+    - Mismo proveedor y mismo nº -> continuación.
+    """
+    grupos = []
+    actual = None
+
+    for i, info in enumerate(analisis_por_pagina):
+        proveedor = info.get("proveedor")
+        id_doc = info.get("id_documento")
+
+        if proveedor is None:
+            if actual is None:
+                actual = {"paginas": [i], "proveedor": "Desconocido", "id_documento": None}
+            else:
+                actual["paginas"].append(i)
+            continue
+
+        es_continuacion = (
+            actual is not None
+            and actual["proveedor"] == proveedor
+            and id_doc is not None
+            and actual["id_documento"] == id_doc
+        )
+
+        if es_continuacion:
+            actual["paginas"].append(i)
+        else:
+            if actual:
+                grupos.append(actual)
+            actual = {"paginas": [i], "proveedor": proveedor, "id_documento": id_doc}
+
+    if actual:
+        grupos.append(actual)
+
+    return grupos
+
+
 def dividir_pdf_por_proveedor(ruta_pdf_masivo, carpeta_temporal, usar_ocr=False):
     """
     Recorre un PDF multipágina (Lote).
