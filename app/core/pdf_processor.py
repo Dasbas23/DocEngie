@@ -1,20 +1,15 @@
 from pypdf import PdfReader
 import os
-import sys
-from app.config import TESSERACT_CMD, POPPLER_PATH
+from app.config import POPPLER_PATH
+from app.core import ocr_utils
 
 # Importación condicional
 try:
-    import pytesseract
     from pdf2image import convert_from_path
-    from PIL import Image, ImageOps, ImageEnhance, ImageFilter # <--- NUEVO
 
     OCR_AVAILABLE = True
 except ImportError as e:
     print(f"⚠️ AVISO DEBUG: Falló la importación de OCR. Causa: {e}")
-    OCR_AVAILABLE = False
-except Exception as e:
-    print(f"⚠️ AVISO DEBUG: Error inesperado importando OCR. Causa: {e}")
     OCR_AVAILABLE = False
 
 
@@ -34,12 +29,10 @@ def extraer_texto_pdf(ruta_archivo, forzar_ocr=False):
         if not OCR_AVAILABLE:
             return None, "Librerías OCR no instaladas."
 
-        if not TESSERACT_CMD or not os.path.exists(TESSERACT_CMD):
-            return None, f"❌ Falta Tesseract: {TESSERACT_CMD or 'no encontrado en el sistema (instálalo: sudo dnf install tesseract tesseract-langpack-spa)'}"
+        if not ocr_utils.ocr_disponible():
+            return None, "❌ Falta Tesseract (en Linux: sudo dnf install tesseract tesseract-langpack-spa)"
         if POPPLER_PATH is not None and not os.path.exists(POPPLER_PATH):
             return None, f"❌ Falta Poppler: {POPPLER_PATH}"
-
-        pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
 
         try:
             print(f"   👁️ Motor OCR arrancando... (Procesando imagen)")
@@ -47,30 +40,8 @@ def extraer_texto_pdf(ruta_archivo, forzar_ocr=False):
 
             texto_completo = ""
             for img in images:
-                # --- FASE DE MEJORA DE IMAGEN ---
-                # 1. Convertir a escala de grises
-                img = img.convert('L')
-                # 2. Aumentar contraste
-                enhancer = ImageEnhance.Contrast(img)
-                img = enhancer.enhance(2)
-
-                #Filtro imágen en los bordes
-                img = img.filter(ImageFilter.SHARPEN)
-
-                # [CRÍTICO] Umbral 10 descubierto en pruebas.
-                # Elimina fondos grises (Europart) dejando solo tinta negra fuerte.
-                UMBRAL_CORTE = 10
-                img = img.point(lambda x: 0 if x < UMBRAL_CORTE else 255, '1')
-
-
-
-                # --- LECTURA ---
-                # config='--psm 3' (Auto-detectar bloques, bueno para docs torcidos)
-                # config='--psm 6' (Bloque uniforme de texto) suele ir mejor para listas/tablas
-                # config='--psm 11' (Texto disperso) a veces encuentra cosas perdidas
-                # lang='spa' es vital si tienes el paquete español instalado
-                texto_pagina = pytesseract.image_to_string(img, lang='spa', config='--psm 3')
-                texto_completo += texto_pagina + "\n"
+                # Pre-procesado + Tesseract unificados (mismos que el splitter)
+                texto_completo += ocr_utils.ocr_imagen(img) + "\n"
 
             if not texto_completo.strip():
                 return None, "OCR: Imagen vacía o ilegible."
