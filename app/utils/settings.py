@@ -42,13 +42,16 @@ def cargar_settings(ruta=None):
 
 
 def guardar_settings(settings, ruta=None):
-    """Escribe los settings. Devuelve True/False según éxito."""
+    """Escribe los settings. Devuelve True/False según éxito.
+
+    Los valores deben ser serializables a JSON.
+    """
     ruta = ruta or SETTINGS_PATH
     try:
         os.makedirs(os.path.dirname(ruta), exist_ok=True)
         with open(ruta, "w", encoding="utf-8") as f:
             json.dump(settings, f, indent=4, ensure_ascii=False)
         return True
-    except OSError as e:
+    except (OSError, TypeError) as e:
         print(f"⚠️ No se pudieron guardar los settings: {e}")
         return False

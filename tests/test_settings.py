@@ -45,3 +45,10 @@ def test_claves_desconocidas_se_ignoran(tmp_path):
     s = cargar_settings(ruta=str(ruta))
     assert s["usar_ocr"] is False
     assert "clave_rara" not in s
+
+
+def test_valor_no_serializable_devuelve_false(tmp_path):
+    ruta = str(tmp_path / "settings.json")
+    datos = dict(DEFAULTS)
+    datos["usar_ocr"] = object()  # no serializable
+    assert guardar_settings(datos, ruta=ruta) is False
