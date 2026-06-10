@@ -72,11 +72,7 @@ class PDFClassifierApp(ctk.CTk):
             offvalue="Light",
             font=("Roboto", 12)
         )
-        if self.settings["tema"] == "Light":
-            self.switch_tema.deselect()
-        else:
-            self.switch_tema.select()
-        self.cambiar_tema()
+        self.switch_tema.select()
         self.switch_tema.pack(side="right")
 
         #  PANEL DE CONFIGURACIÓN
@@ -196,6 +192,13 @@ class PDFClassifierApp(ctk.CTk):
             command=self.cerrar_app
         )
         self.btn_exit.grid(row=0, column=1)
+
+        # Restaurar tema guardado (al final: cambiar_tema toca widgets ya creados)
+        if self.settings["tema"] == "Light":
+            self.switch_tema.deselect()
+        else:
+            self.switch_tema.select()
+        self.cambiar_tema()
 
         #--- ATAJOS DEL TECLADO ---
         self.bind('<Return>', lambda e: self.start_processing_thread())
@@ -326,6 +329,7 @@ class PDFClassifierApp(ctk.CTk):
                 except Exception as e:
                     self.log_message(f"💥 Error crítico dividiendo {archivo}: {e}")
                     errores += 1
+                    self.progress_bar.set(num_archivo / total_archivos)
                     continue
 
                 # 2. PROCESAR CADA TROZO (texto y análisis ya vienen del splitter)
