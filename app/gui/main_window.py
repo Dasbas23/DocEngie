@@ -5,10 +5,10 @@ import threading
 import sys
 import shutil
 import time
-from app.core.parser import analizar_documento
 from app.core.file_manager import mover_y_renombrar
 from app.core.splitter import dividir_pdf_por_proveedor
 from app.utils.logger import registrar_evento
+from app.utils.settings import cargar_settings, guardar_settings
 from app.config import DEFAULT_INPUT_DIR, DEFAULT_OUTPUT_DIR, TITULO_APP, VERSION_ACTUAL
 
 
@@ -31,11 +31,13 @@ class PDFClassifierApp(ctk.CTk):
         ctk.set_appearance_mode("system")
         ctk.set_default_color_theme("blue")
 
-        # Variables de estado
-        self.input_folder = ctk.StringVar(value=os.path.abspath(DEFAULT_INPUT_DIR))
-        self.output_folder = ctk.StringVar(value=os.path.abspath(DEFAULT_OUTPUT_DIR))
+        # Variables de estado (restauradas de la última sesión)
+        self.settings = cargar_settings()
+        self.input_folder = ctk.StringVar(value=os.path.abspath(self.settings["last_input_dir"]))
+        self.output_folder = ctk.StringVar(value=os.path.abspath(self.settings["last_output_dir"]))
         self.is_running = False
-        self.usar_ocr = ctk.BooleanVar(value=True) #Se deja True por defecto.
+        self.usar_ocr = ctk.BooleanVar(value=self.settings["usar_ocr"])
+        self.output_manual = self.settings["output_manual"]
 
         # --- LAYOUT PRINCIPAL (GRID) ---
         self.grid_columnconfigure(0, weight=1)
@@ -70,7 +72,11 @@ class PDFClassifierApp(ctk.CTk):
             offvalue="Light",
             font=("Roboto", 12)
         )
-        self.switch_tema.select()
+        if self.settings["tema"] == "Light":
+            self.switch_tema.deselect()
+        else:
+            self.switch_tema.select()
+        self.cambiar_tema()
         self.switch_tema.pack(side="right")
 
         #  PANEL DE CONFIGURACIÓN
@@ -134,7 +140,12 @@ class PDFClassifierApp(ctk.CTk):
             corner_radius=25,
             command=self.start_processing_thread
         )
-        self.btn_run.grid(row=5, column=0, columnspan=3, padx=20, pady=(0, 20), sticky="ew")
+        self.btn_run.grid(row=5, column=0, columnspan=3, padx=20, pady=(0, 10), sticky="ew")
+
+        # Barra de progreso (avanza por archivo de origen procesado)
+        self.progress_bar = ctk.CTkProgressBar(self.frame_config, height=12)
+        self.progress_bar.set(0)
+        self.progress_bar.grid(row=6, column=0, columnspan=3, padx=20, pady=(0, 20), sticky="ew")
 
         # CONSOLA DE REGISTRO (LOG)
         self.frame_log = ctk.CTkFrame(self, fg_color="transparent")
@@ -227,19 +238,37 @@ class PDFClassifierApp(ctk.CTk):
             filetypes=[("Archivos PDF", "*.pdf"), ("Todos los archivos", "*.*")]
         )
         if archivo:
-            #Obtenemos el directorio padre de ese archivo
+            # Obtenemos el directorio padre de ese archivo
             folder = os.path.dirname(archivo)
             self.input_folder.set(folder)
-
-            #Escribir en el log que carpeta se ha detectado
             self.log_message(f"📂 Carpeta origen seleccionada: {folder}")
+
+            # Si el usuario no fijó destino a mano, destino = origen
+            if not self.output_manual:
+                self.output_folder.set(folder)
+                self.log_message(f"📂 Carpeta destino sincronizada con origen")
+
+            self._persistir_settings()
 
     def select_output(self):
         folder = filedialog.askdirectory()
         if folder:
             self.output_folder.set(folder)
+            self.output_manual = True  # elección manual: deja de sincronizarse
+            self._persistir_settings()
+
+    def _persistir_settings(self):
+        self.settings.update({
+            "last_input_dir": self.input_folder.get(),
+            "last_output_dir": self.output_folder.get(),
+            "usar_ocr": self.usar_ocr.get(),
+            "tema": self.switch_tema.get(),
+            "output_manual": self.output_manual,
+        })
+        guardar_settings(self.settings)
 
     def cerrar_app(self):
+        self._persistir_settings()
         self.destroy()
         sys.exit()
 
@@ -254,6 +283,7 @@ class PDFClassifierApp(ctk.CTk):
             return
 
         self.is_running = True
+        self._persistir_settings()
         self.btn_run.configure(state="disabled", text="⏳ PROCESANDO...", fg_color="#7f8c8d")
 
         # Iniciar hilo
@@ -281,9 +311,10 @@ class PDFClassifierApp(ctk.CTk):
             os.makedirs(temp_split_dir, exist_ok=True)
 
         try:
-            for archivo in archivos_origen:
+            total_archivos = len(archivos_origen)
+            for num_archivo, archivo in enumerate(archivos_origen, start=1):
                 ruta_completa_origen = os.path.join(input_dir, archivo)
-                self.lbl_status.configure(text=f"Procesando: {archivo}...")
+                self.lbl_status.configure(text=f"Procesando {num_archivo}/{total_archivos}: {archivo}")
 
                 # 1. DIVIDIR (SPLITTER) - también extrae el texto de cada fragmento
                 try:
@@ -319,6 +350,8 @@ class PDFClassifierApp(ctk.CTk):
                     registrar_evento(f"{archivo} -> {nombre_sub}", datos, ruta_final, exito)
                     procesados_finales += 1
 
+                self.progress_bar.set(num_archivo / total_archivos)
+
         except Exception as e:
             self.log_message(f"❌ ERROR GENERAL: {str(e)}")
         finally:
@@ -339,6 +372,7 @@ class PDFClassifierApp(ctk.CTk):
         # aunque CTK suele tolerarlo, es buena práctica o hacerlo directo si no falla.
         self.btn_run.configure(state="normal", text="▶ INICIAR PROCESAMIENTO", fg_color=COLOR_SUCCESS)
         self.btn_exit.configure(state="normal")
+        self.progress_bar.set(0)
 
         msg_fin = f"🏁 Finalizado. Docs: {procesados} | Errores: {errores}"
         self.lbl_status.configure(text=msg_fin)
