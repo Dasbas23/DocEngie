@@ -352,7 +352,8 @@ class PDFClassifierApp(ctk.CTk):
 
                     # D) Registrar
                     registrar_evento(f"{archivo} -> {nombre_sub}", datos, ruta_final, exito)
-                    procesados_finales += 1
+                    if fragmento["texto"].strip():
+                        procesados_finales += 1
 
                 self.progress_bar.set(num_archivo / total_archivos)
 
