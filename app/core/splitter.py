@@ -1,16 +1,7 @@
 from pypdf import PdfReader, PdfWriter
 from app.core.parser import analizar_documento
-from app.config import TESSERACT_CMD, POPPLER_PATH
+from app.core.ocr_utils import extraer_texto_pagina
 import os
-
-# Importación condicional para OCR
-try:
-    import pytesseract
-    from pdf2image import convert_from_path
-
-    OCR_AVAILABLE = True
-except ImportError:
-    OCR_AVAILABLE = False
 
 
 def agrupar_paginas(analisis_por_pagina):
@@ -65,11 +56,11 @@ def agrupar_paginas(analisis_por_pagina):
 
 def dividir_pdf_por_proveedor(ruta_pdf_masivo, carpeta_temporal, usar_ocr=False):
     """
-    Recorre un PDF multipágina (Lote).
-    Estrategia de Guillotina: Si detecta un proveedor en una página,
-    asume que es el inicio de un nuevo documento.
+    Trocea un PDF multipágina (Lote) en documentos individuales.
 
-    Soporta OCR si usar_ocr=True y la página no tiene texto nativo.
+    Devuelve: [{"ruta": str, "texto": str, "analisis": dict}, ...]
+    El texto extraído aquí se reaprovecha en la clasificación:
+    no hay que volver a abrir ni OCR-ear los fragmentos.
     """
     if not os.path.exists(ruta_pdf_masivo):
         return []
@@ -80,81 +71,46 @@ def dividir_pdf_por_proveedor(ruta_pdf_masivo, carpeta_temporal, usar_ocr=False)
         print(f"❌ Error abriendo lote PDF: {e}")
         return []
 
-    archivos_generados = []
-
-    writer_actual = None
-    proveedor_actual = "Desconocido"
-    pagina_inicio_actual = 0
-
-    # Configurar Tesseract si hace falta
-    if usar_ocr and OCR_AVAILABLE and TESSERACT_CMD:
-        pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
-
     os.makedirs(carpeta_temporal, exist_ok=True)
 
     total_paginas = len(reader.pages)
-    print(f"🔄 Analizando lote masivo de {total_paginas} páginas (OCR={usar_ocr})...")
+    print(f"🔄 Analizando lote de {total_paginas} páginas (OCR={usar_ocr})...")
 
+    # 1. Extraer texto y analizar página a página (una sola vez)
+    textos = []
+    analisis_paginas = []
     for i, page in enumerate(reader.pages):
-        # 1. Intentar extracción nativa (Rápida)
-        try:
-            text = page.extract_text() or ""
-        except:
-            text = ""
+        texto = extraer_texto_pagina(page, ruta_pdf_masivo, i, usar_ocr)
+        textos.append(texto)
+        analisis = analizar_documento(texto)
+        analisis_paginas.append({
+            "proveedor": analisis["proveedor_detectado"],
+            "id_documento": analisis["id_documento"],
+        })
 
-        # 2. Si no hay texto y el OCR está activado, mirar la imagen (Lento)
-        if not text.strip() and usar_ocr and OCR_AVAILABLE:
-            try:
-                # Convertimos SOLO esta página a imagen (índices 1-based)
-                # Esto evita convertir todo el PDF cada vez
-                imagenes = convert_from_path(
-                    ruta_pdf_masivo,
-                    first_page=i + 1,
-                    last_page=i + 1,
-                    poppler_path=POPPLER_PATH
-                )
-                for img in imagenes:
-                    # Usamos psm 6 como acordamos (bloque de texto)
-                    text += pytesseract.image_to_string(img, lang='spa', config='--psm 6')
-            except Exception as e:
-                print(f"   ⚠️ Fallo OCR en página {i + 1} del splitter: {e}")
+    # 2. Decidir los cortes
+    grupos = agrupar_paginas(analisis_paginas)
 
-        # 3. Analizar: ¿Hay firma de algún proveedor conocido?
-        analisis = analizar_documento(text)
-        nuevo_proveedor = analisis.get("proveedor_detectado")
+    # 3. Escribir cada grupo y devolver texto + análisis del documento completo
+    resultados = []
+    for grupo in grupos:
+        writer = PdfWriter()
+        for indice in grupo["paginas"]:
+            writer.add_page(reader.pages[indice])
 
-        # --- LÓGICA DE GUILLOTINA ---
-        if nuevo_proveedor:
-            # ¡HAY FIRMA! -> PORTADA
-            if writer_actual:
-                print(f"   ✂️ Corte en pág {i + 1}. Fin del doc anterior ({proveedor_actual}).")
-                ruta = _guardar_fragmento(writer_actual, proveedor_actual, pagina_inicio_actual, carpeta_temporal)
-                archivos_generados.append(ruta)
+        ruta = _guardar_fragmento(
+            writer, grupo["proveedor"], grupo["paginas"][0], carpeta_temporal
+        )
+        texto_grupo = "\n".join(textos[indice] for indice in grupo["paginas"])
+        resultados.append({
+            "ruta": ruta,
+            "texto": texto_grupo,
+            # El análisis del grupo completo extrae también fecha y carpeta destino
+            "analisis": analizar_documento(texto_grupo),
+        })
+        print(f"   ✂️ Documento: {grupo['proveedor']} (págs {grupo['paginas']})")
 
-            # Nuevo documento
-            writer_actual = PdfWriter()
-            writer_actual.add_page(page)
-            proveedor_actual = nuevo_proveedor
-            pagina_inicio_actual = i
-
-        else:
-            # CONTINUACIÓN
-            if writer_actual:
-                writer_actual.add_page(page)
-            else:
-                # Documento Huérfano al inicio
-                writer_actual = PdfWriter()
-                writer_actual.add_page(page)
-                proveedor_actual = "Desconocido"
-                pagina_inicio_actual = i
-
-    # Guardar último bloque
-    if writer_actual:
-        ruta = _guardar_fragmento(writer_actual, proveedor_actual, pagina_inicio_actual, carpeta_temporal)
-        archivos_generados.append(ruta)
-        print(f"   🏁 Guardado bloque final ({proveedor_actual}).")
-
-    return archivos_generados
+    return resultados
 
 
 def _guardar_fragmento(writer, proveedor, indice_pag, carpeta):

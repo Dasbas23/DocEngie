@@ -5,7 +5,6 @@ import threading
 import sys
 import shutil
 import time
-from app.core.pdf_processor import extraer_texto_pdf
 from app.core.parser import analizar_documento
 from app.core.file_manager import mover_y_renombrar
 from app.core.splitter import dividir_pdf_por_proveedor
@@ -286,44 +285,28 @@ class PDFClassifierApp(ctk.CTk):
                 ruta_completa_origen = os.path.join(input_dir, archivo)
                 self.lbl_status.configure(text=f"Procesando: {archivo}...")
 
-                # 1. DIVIDIR (SPLITTER)
+                # 1. DIVIDIR (SPLITTER) - también extrae el texto de cada fragmento
                 try:
-                    if dividir_pdf_por_proveedor:
-                        # [CAMBIO] Ahora pasamos el argumento usar_ocr
-                        sub_archivos = dividir_pdf_por_proveedor(
-                            ruta_completa_origen,
-                            temp_split_dir,
-                            usar_ocr=usar_ocr_activo  # <--- AQUÍ ESTÁ LA CLAVE
-                        )
-                    else:
-                        sub_archivos = [ruta_completa_origen]
+                    sub_archivos = dividir_pdf_por_proveedor(
+                        ruta_completa_origen,
+                        temp_split_dir,
+                        usar_ocr=usar_ocr_activo
+                    )
                 except Exception as e:
                     self.log_message(f"💥 Error crítico dividiendo {archivo}: {e}")
                     errores += 1
                     continue
 
-                # 2. PROCESAR CADA TROZO
-                for sub_ruta in sub_archivos:
+                # 2. PROCESAR CADA TROZO (texto y análisis ya vienen del splitter)
+                for fragmento in sub_archivos:
+                    sub_ruta = fragmento["ruta"]
                     nombre_sub = os.path.basename(sub_ruta)
+                    datos = fragmento["analisis"]
 
-                    # A) Leer (Pasamos forzar_ocr si la función lo soporta)
-                    try:
-                        # Asumiendo que extraer_texto_pdf fue actualizado para aceptar el argumento
-                        # Si tu función core no acepta argumentos, elimina 'forzar_ocr=usar_ocr_activo'
-                        texto, error = extraer_texto_pdf(sub_ruta, forzar_ocr=usar_ocr_activo)
-                    except TypeError:
-                        # Si la función del core antigua no acepta el parametro OCR, lo llamamos normal
-                        texto, error = extraer_texto_pdf(sub_ruta)
-
-                    if error:
-                        self.log_message(f"   ⚠️ Error lectura {nombre_sub}: {error}")
+                    if not fragmento["texto"].strip():
+                        self.log_message(f"   ⚠️ {nombre_sub}: sin texto legible -> Revision_Manual")
                         errores += 1
-                        continue
-
-                    # B) Analizar
-                    datos = analizar_documento(texto)
-
-                    if datos.get("proveedor_detectado"):
+                    elif datos.get("proveedor_detectado"):
                         self.log_message(
                             f"   ✅ {datos['proveedor_detectado']} | Doc: {datos.get('id_documento', 'N/A')}")
                     else:
