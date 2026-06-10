@@ -3,3 +3,5 @@ pypdf
 packaging
 pytesseract
 pdf2image
+pillow
+pytest
