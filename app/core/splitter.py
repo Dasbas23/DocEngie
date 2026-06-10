@@ -37,7 +37,7 @@ def dividir_pdf_por_proveedor(ruta_pdf_masivo, carpeta_temporal, usar_ocr=False)
     pagina_inicio_actual = 0
 
     # Configurar Tesseract si hace falta
-    if usar_ocr and OCR_AVAILABLE:
+    if usar_ocr and OCR_AVAILABLE and TESSERACT_CMD:
         pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
 
     os.makedirs(carpeta_temporal, exist_ok=True)

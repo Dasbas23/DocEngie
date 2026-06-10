@@ -34,8 +34,10 @@ def extraer_texto_pdf(ruta_archivo, forzar_ocr=False):
         if not OCR_AVAILABLE:
             return None, "Librerías OCR no instaladas."
 
-        if not os.path.exists(TESSERACT_CMD): return None, f"❌ Falta Tesseract: {TESSERACT_CMD}"
-        if not os.path.exists(POPPLER_PATH): return None, f"❌ Falta Poppler: {POPPLER_PATH}"
+        if not TESSERACT_CMD or not os.path.exists(TESSERACT_CMD):
+            return None, f"❌ Falta Tesseract: {TESSERACT_CMD or 'no encontrado en el sistema (instálalo: sudo dnf install tesseract tesseract-langpack-spa)'}"
+        if POPPLER_PATH is not None and not os.path.exists(POPPLER_PATH):
+            return None, f"❌ Falta Poppler: {POPPLER_PATH}"
 
         pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
 
