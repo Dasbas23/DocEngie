@@ -58,4 +58,11 @@ DocEngie/
 ├── data/
 │   ├── rules/proveedores.json  # Reglas dinámicas
 │   └── logs/               # Registro de operaciones
-└── main.py                 # Entry Point
+└── main.py                 # Entry Point 
+```
+>### \✏️/ Posibles mejoras.
+>> - Migrar a UV (sencillo)
+>> - Tests reales
+>> - Hacer que se utilice aceleración por GPU si está disponible 🚀. 
+>>> Es cierto que paddleOCR si admite gpu pero si no está disponible gasta muchos recursos. 
+>>> Tesseract es bastante eficiente desde que Fable me hizo los ajustes finos
