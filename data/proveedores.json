@@ -47,5 +47,12 @@
         "patron_fecha": "(\\d{2}[/.]\\s*\\d{2}[/.]\\s*\\d{4})",
         "formato_fecha_origen": "%d/%m/%Y" ,
         "carpeta_destino": "Wurth_Albaranes"
+    },
+    "BARREIRO": {
+        "firma": ["[Gg]rupo\\s*Barreiro", "grupobarreiro", "[8B][\\s.-]?1506010[6b]", "981\\s?783\\s?843"],
+        "patron_documento": "\\w*mero\\s*[:.]?\\s*(?<!\\d)(\\d{8})(?!\\d)",
+        "patron_fecha": "fecha\\s*[:.]?\\s*(\\d{1,2}\\s*/\\s*\\d{2}\\s*/\\s*\\d{4})",
+        "formato_fecha_origen": "%d/%m/%Y",
+        "carpeta_destino": "Barreiro_Albaranes"
     }
 }
